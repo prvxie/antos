@@ -628,7 +628,7 @@ return Library.IO.isfile(p)
                         Main.Name = "Main"
                         Main.Position = UDim2.new(0.5,0,0.5,0)
                         Main.Size = UDim2.new(0,600,0,720)
-                        Main.BackgroundColor3 = Color3.fromRGB(15, 10, 25)
+                        Main.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
                         Main.BorderColor3 = Color3.new(0,0,0)
                         Main.AnchorPoint = Vector2.new(0.5,0.5)
 
@@ -660,24 +660,24 @@ return Library._PopupGui end
                         Inline.Name = "Inline"
                         Inline.Position = UDim2.new(0,2,0,2)
                         Inline.Size = UDim2.new(1,-4,1,-4)
-                        Inline.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
+                        Inline.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
                         Inline.BorderColor3 = Color3.new(0,0,0)
                         Middle.Name = "Middle"
                         Middle.Position = UDim2.new(0,-1,0,22)
                         Middle.Size = UDim2.new(1,2,1,-44)
-                        Middle.BackgroundColor3 = Color3.fromRGB(30, 22, 42)
+                        Middle.BackgroundColor3 = Color3.fromRGB(24, 24, 24)
                         Middle.BorderColor3 = Color3.new(0,0,0)
                         Middle.BorderMode = Enum.BorderMode.Inset
                         Line.Name = "Line"
                         Line.Position = UDim2.new(0,-1,0,0)
                         Line.Size = UDim2.new(1,2,0,1)
-                        Line.BackgroundColor3 = Color3.fromRGB(80, 60, 110)
+                        Line.BackgroundColor3 = Color3.fromRGB(110, 110, 110)
                         Line.BorderSizePixel = 0
                         Line.BorderColor3 = Color3.new(0,0,0)
                         Line2.Name = "Line2"
                         Line2.Position = UDim2.new(0,-1,1,-1)
                         Line2.Size = UDim2.new(1,2,0,1)
-                        Line2.BackgroundColor3 = Color3.fromRGB(80, 60, 110)
+                        Line2.BackgroundColor3 = Color3.fromRGB(110, 110, 110)
                         Line2.BorderSizePixel = 0
                         Line2.BorderColor3 = Color3.new(0,0,0)
                         Gradient.Name = "Gradient"
@@ -689,8 +689,8 @@ return Library._PopupGui end
                         Library.Gradient = Gradient
                         UIGradient.Color = ColorSequence.new{
                                 ColorSequenceKeypoint.new(0, Library.Accent),
-                                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(100, 70, 150)),
-                                ColorSequenceKeypoint.new(1, Color3.fromRGB(30, 22, 42))
+                                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(150, 150, 150)),
+                                ColorSequenceKeypoint.new(1, Color3.fromRGB(24, 24, 24))
                         }
                         UIGradient.Rotation = 180
                         Library.UIGradient = UIGradient
@@ -727,8 +727,8 @@ return Library._PopupGui end
                         Sections.Name = "Sections"
                         Sections.Position = UDim2.new(0,10,0,13)
                         Sections.Size = UDim2.new(0,160,1,-26)
-                        Sections.BackgroundColor3 = Color3.fromRGB(22, 16, 32)
-                        Sections.BorderColor3 = Color3.fromRGB(60, 45, 85)
+                        Sections.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+                        Sections.BorderColor3 = Color3.fromRGB(68, 68, 68)
                         Pages.Name = "Pages"
                         Pages.Position = UDim2.new(0,0,0,0)
                         Pages.Size = UDim2.new(1,-6,1,0)
@@ -763,10 +763,10 @@ return Library._PopupGui end
                                 local InlineGradient = Instance.new('UIGradient', Inline)
                                 InlineGradient.Rotation = 90
                                 InlineGradient.Color = ColorSequence.new{
-                                        ColorSequenceKeypoint.new(0, Color3.fromRGB(60,40,80)),
-                                        ColorSequenceKeypoint.new(0.3, Color3.fromRGB(40,30,60)),
-                                        ColorSequenceKeypoint.new(0.7, Color3.fromRGB(25,20,40)),
-                                        ColorSequenceKeypoint.new(1, Color3.fromRGB(15,12,25))
+                                        ColorSequenceKeypoint.new(0, Color3.fromRGB(70, 70, 70)),
+                                        ColorSequenceKeypoint.new(0.3, Color3.fromRGB(48, 48, 48)),
+                                        ColorSequenceKeypoint.new(0.7, Color3.fromRGB(34, 34, 34)),
+                                        ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20))
                                 }
                                 local TopGradient = Instance.new('Frame', Top)
                                 TopGradient.Name = "TopGrad"
@@ -778,7 +778,7 @@ return Library._PopupGui end
                                 TopUiGrad.Rotation = 90
                                 TopUiGrad.Color = ColorSequence.new{
                                         ColorSequenceKeypoint.new(0, Library.Accent),
-                                        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(80, 50, 120)),
+                                        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(140, 140, 140)),
                                         ColorSequenceKeypoint.new(1, Color3.fromRGB(11,12,15))
                                 }
                                 TopUiGrad.Transparency = NumberSequence.new{
@@ -862,8 +862,8 @@ return Library._PopupGui end
                         Button.Name = "Button"
                         Button.Position = UDim2.new(0,0,0,3)
                         Button.Size = UDim2.new(1,0,1,-2)
-                        Button.BackgroundColor3 = Color3.fromRGB(35, 26, 50)
-                        Button.BorderColor3 = Color3.fromRGB(80, 60, 110)
+                        Button.BackgroundColor3 = Color3.fromRGB(34, 34, 34)
+                        Button.BorderColor3 = Color3.fromRGB(110, 110, 110)
                         Button.ZIndex = 53
                         Button.Visible = false
                         TopLine.Name = "TopLine"
@@ -2671,8 +2671,8 @@ return Library._PopupGui end
                                                 local menu = Instance.new("Frame", pg)
                                                 menu.Name = "KeybindModeMenu"
                                                 menu.Size = UDim2.fromOffset(88, 51)
-                                                menu.BackgroundColor3 = Color3.fromRGB(20, 15, 30)
-                                                menu.BorderColor3 = Color3.fromRGB(80, 60, 110)
+                                                menu.BackgroundColor3 = Color3.fromRGB(16, 16, 16)
+                                                menu.BorderColor3 = Color3.fromRGB(110, 110, 110)
                                                 menu.ZIndex = 6000
                                                 menu.Visible = false
                                                 local uil = Instance.new("UIListLayout", menu)
@@ -2680,7 +2680,7 @@ return Library._PopupGui end
                                                 for i, modeName in ipairs({"Toggle", "Hold", "Always"}) do
                                                         local btn = Instance.new("TextButton", menu)
                                                         btn.Size = UDim2.new(1, 0, 0, 17)
-                                                        btn.BackgroundColor3 = Color3.fromRGB(15, 10, 25)
+                                                        btn.BackgroundColor3 = Color3.fromRGB(8, 8, 8)
                                                         btn.BackgroundTransparency = 0
                                                         btn.BorderSizePixel = 0
                                                         btn.Text = modeName
@@ -2691,7 +2691,7 @@ return Library._PopupGui end
                                                         btn.LayoutOrder = i
                                                         btn.AutoButtonColor = false
                                                         btn.MouseEnter:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(60, 45, 80) end)
-                                                        btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(15, 10, 25) end)
+                                                        btn.MouseLeave:Connect(function() btn.BackgroundColor3 = Color3.fromRGB(8, 8, 8) end)
                                                         btn.MouseButton1Click:Connect(function()
                                                                 _setMode(modeName)
                                                                 menu.Visible = false
@@ -2993,7 +2993,7 @@ return Library._PopupGui end
                         local Img = Instance.new('ImageLabel', Holder)
                         Img.Position = UDim2.new(0, 12, 0, 2)
                         Img.Size = UDim2.new(1, -24, 0, height)
-                        Img.BackgroundColor3 = Color3.fromRGB(22, 16, 32)
+                        Img.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
                         Img.BorderSizePixel = 0
                         Img.Image = tostring(Properties.image or Properties.Image or "")
                         Img.ScaleType = Properties.scaleType or Enum.ScaleType.Fit
@@ -3001,7 +3001,7 @@ return Library._PopupGui end
                         local C = Instance.new("UICorner", Img)
                         C.CornerRadius = UDim.new(0, 4)
                         local S = Instance.new("UIStroke", Img)
-                        S.Color = Color3.fromRGB(60, 45, 85); S.Thickness = 1
+                        S.Color = Color3.fromRGB(68, 68, 68); S.Thickness = 1
                         local Image = { Instance = Img }
                         function Image:Set(id) Img.Image = tostring(id) end
                         return Image
@@ -3043,11 +3043,11 @@ return Library._PopupGui end
                         local Track = Instance.new('Frame', Holder)
                         Track.Position = UDim2.new(0, 15, 0, 14)
                         Track.Size = UDim2.new(1, -30, 0, 4)
-                        Track.BackgroundColor3 = Color3.fromRGB(22, 16, 32)
+                        Track.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
                         Track.BorderSizePixel = 0
                         Track.ZIndex = 105
                         local TC = Instance.new("UICorner", Track); TC.CornerRadius = UDim.new(0, 2)
-                        local TS = Instance.new("UIStroke", Track); TS.Color = Color3.fromRGB(60, 45, 85); TS.Thickness = 1
+                        local TS = Instance.new("UIStroke", Track); TS.Color = Color3.fromRGB(68, 68, 68); TS.Thickness = 1
                         local Fill = Instance.new('Frame', Track)
                         Fill.Size = UDim2.new(0, 0, 1, 0)
                         Fill.BackgroundColor3 = Library.Accent
@@ -3056,8 +3056,8 @@ return Library._PopupGui end
                         local FC = Instance.new("UICorner", Fill); FC.CornerRadius = UDim.new(0, 2)
                         local Grad = Instance.new("UIGradient", Fill)
                         Grad.Color = ColorSequence.new{
-                                ColorSequenceKeypoint.new(0, Color3.fromRGB(108, 78, 180)),
-                                ColorSequenceKeypoint.new(1, Color3.fromRGB(186, 152, 255)),
+                                ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 120, 120)),
+                                ColorSequenceKeypoint.new(1, Color3.fromRGB(220, 220, 220)),
                         }
                         table.insert(Library.Instances, Title)
                         table.insert(Library.ThemeObjects, Fill)
@@ -3181,5 +3181,161 @@ end
 
 
 
+
+
+
+function Library:CreateWatermark(text)
+    local root = self.Holder and self.Holder.Parent
+    if not root then return nil end
+    local frame = Instance.new("Frame", root)
+    frame.Name = "_elocate_watermark"
+    frame.Position = UDim2.fromOffset(12, 10)
+    frame.Size = UDim2.fromOffset(320, 20)
+    frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 1000
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(75, 75, 75)
+    stroke.Thickness = 1
+    local grad = Instance.new("UIGradient", frame)
+    grad.Rotation = 90
+    grad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 30)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 12)),
+    }
+    local label = Instance.new("TextLabel", frame)
+    label.BackgroundTransparency = 1
+    label.Position = UDim2.fromOffset(6, 0)
+    label.Size = UDim2.new(1, -12, 1, 0)
+    label.TextXAlignment = Enum.TextXAlignment.Left
+    label.TextColor3 = Color3.fromRGB(230, 230, 230)
+    label.FontFace = self.UIFont
+    label.TextSize = self.FontSize
+    label.Text = text or "elocate.lol | loaded"
+    label.ZIndex = 1001
+    return {
+        Frame = frame,
+        SetText = function(_, v) label.Text = tostring(v) end,
+        SetVisible = function(_, v) frame.Visible = v and true or false end,
+    }
+end
+
+function Library:CreateKeybindList(title)
+    local root = self.Holder and self.Holder.Parent
+    if not root then return nil end
+    local frame = Instance.new("Frame", root)
+    frame.Name = "_elocate_keybind_list"
+    frame.Position = UDim2.fromOffset(18, 100)
+    frame.Size = UDim2.fromOffset(220, 180)
+    frame.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 1000
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(75, 75, 75)
+    stroke.Thickness = 1
+    local hdr = Instance.new("TextLabel", frame)
+    hdr.BackgroundTransparency = 1
+    hdr.Position = UDim2.fromOffset(8, 4)
+    hdr.Size = UDim2.new(1, -16, 0, 16)
+    hdr.Text = title or "keybinds"
+    hdr.TextXAlignment = Enum.TextXAlignment.Left
+    hdr.TextColor3 = Color3.fromRGB(230, 230, 230)
+    hdr.FontFace = self.UIFont
+    hdr.TextSize = self.FontSize
+    hdr.ZIndex = 1001
+    local line = Instance.new("Frame", frame)
+    line.Position = UDim2.fromOffset(8, 22)
+    line.Size = UDim2.new(1, -16, 0, 1)
+    line.BorderSizePixel = 0
+    line.BackgroundColor3 = Color3.fromRGB(75, 75, 75)
+    line.ZIndex = 1001
+    local list = Instance.new("ScrollingFrame", frame)
+    list.Position = UDim2.fromOffset(8, 28)
+    list.Size = UDim2.new(1, -16, 1, -36)
+    list.BackgroundTransparency = 1
+    list.BorderSizePixel = 0
+    list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    list.CanvasSize = UDim2.new()
+    list.ScrollBarThickness = 3
+    list.ScrollBarImageColor3 = Color3.fromRGB(180, 180, 180)
+    list.ZIndex = 1001
+    local layout = Instance.new("UIListLayout", list)
+    layout.Padding = UDim.new(0, 3)
+    local api = { Frame = frame, Rows = {} }
+    function api:Clear()
+        for _, r in ipairs(self.Rows) do pcall(function() r:Destroy() end) end
+        self.Rows = {}
+    end
+    function api:Add(name, bind)
+        local row = Instance.new("TextLabel", list)
+        row.Size = UDim2.new(1, 0, 0, 14)
+        row.BackgroundTransparency = 1
+        row.TextXAlignment = Enum.TextXAlignment.Left
+        row.TextColor3 = Color3.fromRGB(210, 210, 210)
+        row.FontFace = Library.UIFont
+        row.TextSize = Library.FontSize
+        row.Text = tostring(name) .. "  [" .. tostring(bind) .. "]"
+        row.ZIndex = 1002
+        table.insert(self.Rows, row)
+        return row
+    end
+    return api
+end
+
+function Library:CreatePlayerList(title)
+    local root = self.Holder and self.Holder.Parent
+    if not root then return nil end
+    local frame = Instance.new("Frame", root)
+    frame.Name = "_elocate_player_list"
+    frame.Position = UDim2.fromOffset(760, 100)
+    frame.Size = UDim2.fromOffset(260, 300)
+    frame.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
+    frame.BorderSizePixel = 0
+    frame.ZIndex = 1000
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(75, 75, 75)
+    stroke.Thickness = 1
+    local hdr = Instance.new("TextLabel", frame)
+    hdr.BackgroundTransparency = 1
+    hdr.Position = UDim2.fromOffset(8, 4)
+    hdr.Size = UDim2.new(1, -16, 0, 16)
+    hdr.Text = title or "playerlist"
+    hdr.TextXAlignment = Enum.TextXAlignment.Left
+    hdr.TextColor3 = Color3.fromRGB(230, 230, 230)
+    hdr.FontFace = self.UIFont
+    hdr.TextSize = self.FontSize
+    hdr.ZIndex = 1001
+    local list = Instance.new("ScrollingFrame", frame)
+    list.Position = UDim2.fromOffset(8, 24)
+    list.Size = UDim2.new(1, -16, 1, -32)
+    list.BackgroundTransparency = 1
+    list.BorderSizePixel = 0
+    list.AutomaticCanvasSize = Enum.AutomaticSize.Y
+    list.CanvasSize = UDim2.new()
+    list.ScrollBarThickness = 3
+    list.ScrollBarImageColor3 = Color3.fromRGB(180, 180, 180)
+    list.ZIndex = 1001
+    local layout = Instance.new("UIListLayout", list)
+    layout.Padding = UDim.new(0, 3)
+    local api = { Frame = frame, Rows = {} }
+    function api:Clear()
+        for _, r in ipairs(self.Rows) do pcall(function() r:Destroy() end) end
+        self.Rows = {}
+    end
+    function api:Add(name, extra)
+        local row = Instance.new("TextLabel", list)
+        row.Size = UDim2.new(1, 0, 0, 14)
+        row.BackgroundTransparency = 1
+        row.TextXAlignment = Enum.TextXAlignment.Left
+        row.TextColor3 = Color3.fromRGB(210, 210, 210)
+        row.FontFace = Library.UIFont
+        row.TextSize = Library.FontSize
+        row.Text = extra and (tostring(name) .. "  " .. tostring(extra)) or tostring(name)
+        row.ZIndex = 1002
+        table.insert(self.Rows, row)
+        return row
+    end
+    return api
+end
 
 return Library
