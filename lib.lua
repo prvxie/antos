@@ -3184,35 +3184,80 @@ end
 
 
 
+local function _elocateStylePanel(frame, z)
+    frame.BorderSizePixel = 0
+    frame.ZIndex = z or 1000
+    frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
+    local grad = Instance.new("UIGradient", frame)
+    grad.Rotation = 90
+    grad.Color = ColorSequence.new{
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(40, 40, 40)),
+        ColorSequenceKeypoint.new(0.6, Color3.fromRGB(20, 20, 20)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(10, 10, 10)),
+    }
+    local stroke = Instance.new("UIStroke", frame)
+    stroke.Color = Color3.fromRGB(100, 100, 100)
+    stroke.Thickness = 1
+    local glow = Instance.new("UIStroke", frame)
+    glow.Color = Color3.fromRGB(220, 220, 220)
+    glow.Thickness = 2
+    glow.Transparency = 0.78
+end
+
+local function _elocateMakeDraggable(target, handle)
+    handle = handle or target
+    target.Active = true
+    local dragging = false
+    local dragStart
+    local startPos
+    handle.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = true
+            dragStart = input.Position
+            startPos = target.Position
+        end
+    end)
+    handle.InputEnded:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            dragging = false
+        end
+    end)
+    game:GetService("UserInputService").InputChanged:Connect(function(input)
+        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+            local delta = input.Position - dragStart
+            target.Position = UDim2.new(
+                startPos.X.Scale, startPos.X.Offset + delta.X,
+                startPos.Y.Scale, startPos.Y.Offset + delta.Y
+            )
+        end
+    end)
+end
+
 function Library:CreateWatermark(text)
     local root = self.Holder and self.Holder.Parent
     if not root then return nil end
     local frame = Instance.new("Frame", root)
     frame.Name = "_elocate_watermark"
     frame.Position = UDim2.fromOffset(12, 10)
-    frame.Size = UDim2.fromOffset(320, 20)
-    frame.BackgroundColor3 = Color3.fromRGB(12, 12, 12)
-    frame.BorderSizePixel = 0
-    frame.ZIndex = 1000
-    local stroke = Instance.new("UIStroke", frame)
-    stroke.Color = Color3.fromRGB(75, 75, 75)
-    stroke.Thickness = 1
-    local grad = Instance.new("UIGradient", frame)
-    grad.Rotation = 90
-    grad.Color = ColorSequence.new{
-        ColorSequenceKeypoint.new(0, Color3.fromRGB(30, 30, 30)),
-        ColorSequenceKeypoint.new(1, Color3.fromRGB(12, 12, 12)),
-    }
+    frame.Size = UDim2.fromOffset(320, 22)
+    _elocateStylePanel(frame, 1000)
     local label = Instance.new("TextLabel", frame)
     label.BackgroundTransparency = 1
-    label.Position = UDim2.fromOffset(6, 0)
-    label.Size = UDim2.new(1, -12, 1, 0)
+    label.Position = UDim2.fromOffset(8, 0)
+    label.Size = UDim2.new(1, -16, 1, 0)
     label.TextXAlignment = Enum.TextXAlignment.Left
-    label.TextColor3 = Color3.fromRGB(230, 230, 230)
+    label.TextColor3 = Color3.fromRGB(235, 235, 235)
     label.FontFace = self.UIFont
     label.TextSize = self.FontSize
     label.Text = text or "elocate.lol | loaded"
     label.ZIndex = 1001
+    if self.Holder then
+        frame.Visible = self.Holder.Visible
+        self:Connection(self.Holder:GetPropertyChangedSignal("Visible"), function()
+            frame.Visible = self.Holder.Visible
+        end)
+    end
+    _elocateMakeDraggable(frame, frame)
     return {
         Frame = frame,
         SetText = function(_, v) label.Text = tostring(v) end,
@@ -3226,13 +3271,8 @@ function Library:CreateKeybindList(title)
     local frame = Instance.new("Frame", root)
     frame.Name = "_elocate_keybind_list"
     frame.Position = UDim2.fromOffset(18, 100)
-    frame.Size = UDim2.fromOffset(220, 180)
-    frame.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
-    frame.BorderSizePixel = 0
-    frame.ZIndex = 1000
-    local stroke = Instance.new("UIStroke", frame)
-    stroke.Color = Color3.fromRGB(75, 75, 75)
-    stroke.Thickness = 1
+    frame.Size = UDim2.fromOffset(230, 190)
+    _elocateStylePanel(frame, 1000)
     local hdr = Instance.new("TextLabel", frame)
     hdr.BackgroundTransparency = 1
     hdr.Position = UDim2.fromOffset(8, 4)
@@ -3247,7 +3287,7 @@ function Library:CreateKeybindList(title)
     line.Position = UDim2.fromOffset(8, 22)
     line.Size = UDim2.new(1, -16, 0, 1)
     line.BorderSizePixel = 0
-    line.BackgroundColor3 = Color3.fromRGB(75, 75, 75)
+    line.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
     line.ZIndex = 1001
     local list = Instance.new("ScrollingFrame", frame)
     list.Position = UDim2.fromOffset(8, 28)
@@ -3261,6 +3301,13 @@ function Library:CreateKeybindList(title)
     list.ZIndex = 1001
     local layout = Instance.new("UIListLayout", list)
     layout.Padding = UDim.new(0, 3)
+    if self.Holder then
+        frame.Visible = self.Holder.Visible
+        self:Connection(self.Holder:GetPropertyChangedSignal("Visible"), function()
+            frame.Visible = self.Holder.Visible
+        end)
+    end
+    _elocateMakeDraggable(frame, hdr)
     local api = { Frame = frame, Rows = {} }
     function api:Clear()
         for _, r in ipairs(self.Rows) do pcall(function() r:Destroy() end) end
@@ -3269,13 +3316,23 @@ function Library:CreateKeybindList(title)
     function api:Add(name, bind)
         local row = Instance.new("TextLabel", list)
         row.Size = UDim2.new(1, 0, 0, 14)
-        row.BackgroundTransparency = 1
+        row.BackgroundTransparency = 0
+        row.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         row.TextXAlignment = Enum.TextXAlignment.Left
         row.TextColor3 = Color3.fromRGB(210, 210, 210)
         row.FontFace = Library.UIFont
         row.TextSize = Library.FontSize
         row.Text = tostring(name) .. "  [" .. tostring(bind) .. "]"
         row.ZIndex = 1002
+        local rg = Instance.new("UIGradient", row)
+        rg.Rotation = 90
+        rg.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(36, 36, 36)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20)),
+        }
+        local rs = Instance.new("UIStroke", row)
+        rs.Color = Color3.fromRGB(74, 74, 74)
+        rs.Thickness = 1
         table.insert(self.Rows, row)
         return row
     end
@@ -3288,13 +3345,8 @@ function Library:CreatePlayerList(title)
     local frame = Instance.new("Frame", root)
     frame.Name = "_elocate_player_list"
     frame.Position = UDim2.fromOffset(760, 100)
-    frame.Size = UDim2.fromOffset(260, 300)
-    frame.BackgroundColor3 = Color3.fromRGB(14, 14, 14)
-    frame.BorderSizePixel = 0
-    frame.ZIndex = 1000
-    local stroke = Instance.new("UIStroke", frame)
-    stroke.Color = Color3.fromRGB(75, 75, 75)
-    stroke.Thickness = 1
+    frame.Size = UDim2.fromOffset(270, 310)
+    _elocateStylePanel(frame, 1000)
     local hdr = Instance.new("TextLabel", frame)
     hdr.BackgroundTransparency = 1
     hdr.Position = UDim2.fromOffset(8, 4)
@@ -3317,6 +3369,13 @@ function Library:CreatePlayerList(title)
     list.ZIndex = 1001
     local layout = Instance.new("UIListLayout", list)
     layout.Padding = UDim.new(0, 3)
+    if self.Holder then
+        frame.Visible = self.Holder.Visible
+        self:Connection(self.Holder:GetPropertyChangedSignal("Visible"), function()
+            frame.Visible = self.Holder.Visible
+        end)
+    end
+    _elocateMakeDraggable(frame, hdr)
     local api = { Frame = frame, Rows = {} }
     function api:Clear()
         for _, r in ipairs(self.Rows) do pcall(function() r:Destroy() end) end
@@ -3325,13 +3384,23 @@ function Library:CreatePlayerList(title)
     function api:Add(name, extra)
         local row = Instance.new("TextLabel", list)
         row.Size = UDim2.new(1, 0, 0, 14)
-        row.BackgroundTransparency = 1
+        row.BackgroundTransparency = 0
+        row.BackgroundColor3 = Color3.fromRGB(20, 20, 20)
         row.TextXAlignment = Enum.TextXAlignment.Left
         row.TextColor3 = Color3.fromRGB(210, 210, 210)
         row.FontFace = Library.UIFont
         row.TextSize = Library.FontSize
         row.Text = extra and (tostring(name) .. "  " .. tostring(extra)) or tostring(name)
         row.ZIndex = 1002
+        local rg = Instance.new("UIGradient", row)
+        rg.Rotation = 90
+        rg.Color = ColorSequence.new{
+            ColorSequenceKeypoint.new(0, Color3.fromRGB(36, 36, 36)),
+            ColorSequenceKeypoint.new(1, Color3.fromRGB(20, 20, 20)),
+        }
+        local rs = Instance.new("UIStroke", row)
+        rs.Color = Color3.fromRGB(74, 74, 74)
+        rs.Thickness = 1
         table.insert(self.Rows, row)
         return row
     end
