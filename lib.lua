@@ -207,23 +207,94 @@ local Library do
     }
 
     local Themes = {
-        ["Preset"] = {
-            ["Background"] = FromRGB(14, 17, 15),
-            ["Border"] = FromRGB(12, 12, 12),
-            ["Inline"] = FromRGB(20, 24, 21),
-            ["Hovered Element"] = FromRGB(37, 42, 45),
-            ["Page Background"] = FromRGB(25, 30, 26),
-            ["Outline"] = FromRGB(42, 49, 45),
-            ["Element"] = FromRGB(30, 36, 31),
-            ["Gradient"] = FromRGB(208, 208, 208),
-            ["Text"] = FromRGB(235, 235, 235),
-            ["Text Stroke"] = FromRGB(0, 0, 0),
+        ["Mono"] = {
+            ["Background"]       = FromRGB(10,  10,  10),
+            ["Border"]           = FromRGB(30,  30,  30),
+            ["Inline"]           = FromRGB(20,  20,  20),
+            ["Hovered Element"]  = FromRGB(45,  45,  45),
+            ["Page Background"]  = FromRGB(26,  26,  26),
+            ["Outline"]          = FromRGB(58,  58,  58),
+            ["Element"]          = FromRGB(33,  33,  33),
+            ["Gradient"]         = FromRGB(200, 200, 200),
+            ["Text"]             = FromRGB(240, 240, 240),
+            ["Text Stroke"]      = FromRGB(0,   0,   0),
+            ["Placeholder Text"] = FromRGB(150, 150, 150),
+            ["Accent"]           = FromRGB(215, 215, 215),
+        },
+        ["Green"] = {
+            ["Background"]       = FromRGB(14,  17,  15),
+            ["Border"]           = FromRGB(12,  12,  12),
+            ["Inline"]           = FromRGB(20,  24,  21),
+            ["Hovered Element"]  = FromRGB(37,  42,  45),
+            ["Page Background"]  = FromRGB(25,  30,  26),
+            ["Outline"]          = FromRGB(42,  49,  45),
+            ["Element"]          = FromRGB(30,  36,  31),
+            ["Gradient"]         = FromRGB(208, 208, 208),
+            ["Text"]             = FromRGB(235, 235, 235),
+            ["Text Stroke"]      = FromRGB(0,   0,   0),
             ["Placeholder Text"] = FromRGB(185, 185, 185),
-            ["Accent"] = FromRGB(202, 243, 255)
-        }
+            ["Accent"]           = FromRGB(202, 243, 255),
+        },
+        ["Blood"] = {
+            ["Background"]       = FromRGB(12,  8,   8),
+            ["Border"]           = FromRGB(20,  10,  10),
+            ["Inline"]           = FromRGB(22,  12,  12),
+            ["Hovered Element"]  = FromRGB(48,  20,  20),
+            ["Page Background"]  = FromRGB(28,  14,  14),
+            ["Outline"]          = FromRGB(58,  26,  26),
+            ["Element"]          = FromRGB(36,  16,  16),
+            ["Gradient"]         = FromRGB(220, 180, 180),
+            ["Text"]             = FromRGB(240, 220, 220),
+            ["Text Stroke"]      = FromRGB(0,   0,   0),
+            ["Placeholder Text"] = FromRGB(180, 148, 148),
+            ["Accent"]           = FromRGB(255, 75,  75),
+        },
+        ["Ocean"] = {
+            ["Background"]       = FromRGB(8,   12,  18),
+            ["Border"]           = FromRGB(12,  18,  28),
+            ["Inline"]           = FromRGB(12,  18,  26),
+            ["Hovered Element"]  = FromRGB(20,  35,  55),
+            ["Page Background"]  = FromRGB(14,  22,  34),
+            ["Outline"]          = FromRGB(26,  42,  64),
+            ["Element"]          = FromRGB(18,  28,  42),
+            ["Gradient"]         = FromRGB(180, 210, 240),
+            ["Text"]             = FromRGB(220, 235, 252),
+            ["Text Stroke"]      = FromRGB(0,   0,   0),
+            ["Placeholder Text"] = FromRGB(155, 182, 210),
+            ["Accent"]           = FromRGB(80,  180, 255),
+        },
+        ["Purple"] = {
+            ["Background"]       = FromRGB(12,  8,   18),
+            ["Border"]           = FromRGB(18,  12,  28),
+            ["Inline"]           = FromRGB(20,  14,  30),
+            ["Hovered Element"]  = FromRGB(40,  25,  60),
+            ["Page Background"]  = FromRGB(26,  18,  40),
+            ["Outline"]          = FromRGB(52,  32,  75),
+            ["Element"]          = FromRGB(32,  22,  50),
+            ["Gradient"]         = FromRGB(200, 178, 232),
+            ["Text"]             = FromRGB(235, 218, 252),
+            ["Text Stroke"]      = FromRGB(0,   0,   0),
+            ["Placeholder Text"] = FromRGB(172, 155, 200),
+            ["Accent"]           = FromRGB(182, 100, 255),
+        },
+        ["Gold"] = {
+            ["Background"]       = FromRGB(14,  12,  7),
+            ["Border"]           = FromRGB(22,  18,  10),
+            ["Inline"]           = FromRGB(26,  22,  12),
+            ["Hovered Element"]  = FromRGB(50,  40,  18),
+            ["Page Background"]  = FromRGB(33,  26,  13),
+            ["Outline"]          = FromRGB(62,  50,  20),
+            ["Element"]          = FromRGB(40,  32,  15),
+            ["Gradient"]         = FromRGB(240, 218, 158),
+            ["Text"]             = FromRGB(246, 235, 208),
+            ["Text Stroke"]      = FromRGB(0,   0,   0),
+            ["Placeholder Text"] = FromRGB(192, 172, 135),
+            ["Accent"]           = FromRGB(255, 200, 48),
+        },
     }
 
-    Library.Theme = TableClone(Themes["Preset"])
+    Library.Theme  = TableClone(Themes["Mono"])
+    Library.Themes = Themes
     Library.Font = nil  -- set during Library:_Init()
 
 
@@ -849,6 +920,14 @@ local Library do
                     Item.Item[Property] = Value()
                 end
             end
+        end
+    end
+
+    Library.ApplyThemePreset = function(self, ThemeName)
+        local Preset = Library.Themes and Library.Themes[ThemeName]
+        if not Preset then return end
+        for Key, Color in Preset do
+            Library:ChangeTheme(Key, Color)
         end
     end
 
@@ -4768,7 +4847,7 @@ local Library do
                 Position = UDim2New(0, 12, 0.5, 80),
                 BorderColor3 = FromRGB(12, 12, 12),
                 BorderSizePixel = 2,
-                Size = UDim2New(0, 185, 0, 0),
+                Size = UDim2New(0, 220, 0, 0),
                 AutomaticSize = Enum.AutomaticSize.Y,
                 BackgroundColor3 = FromRGB(14, 17, 15),
                 Visible = false,
@@ -6425,6 +6504,22 @@ local Library do
         local SettingsPage = Window:Page({Name = "Settings", SubPages = true}) do 
             local ThemingSubPage = SettingsPage:SubPage({Name = "Theming", Columns = 2}) do 
                 local ThemesSection = ThemingSubPage:Section({Name = "Themes", Side = 1}) do
+                    local ThemePresetNames = {}
+                    for Name in Library.Themes do
+                        TableInsert(ThemePresetNames, Name)
+                    end
+                    table.sort(ThemePresetNames)
+
+                    ThemesSection:Dropdown({
+                        Name = "Theme Preset",
+                        Flag = "ThemePreset",
+                        Items = ThemePresetNames,
+                        Default = "Mono",
+                        Callback = function(Value)
+                            Library:ApplyThemePreset(Value)
+                        end
+                    })
+
                     for Index, Value in Library.Theme do 
                         ThemesSection:Label(Index):Colorpicker({
                             Name = Index,
