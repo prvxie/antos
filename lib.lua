@@ -495,19 +495,19 @@ local Library do
             local ResizeMax = Gui.Parent.AbsoluteSize - Gui.AbsoluteSize
 
             local ResizeButton = Instances:Create("ImageButton", {
-				Parent = Gui,
+                                Parent = Gui,
                 Image = "rbxassetid://",
-				AnchorPoint = Vector2New(1, 1),
-				BorderColor3 = FromRGB(0, 0, 0),
-				Size = UDim2New(0, 6, 0, 6),
-				Position = UDim2New(1, -4, 1, -4),
+                                AnchorPoint = Vector2New(1, 1),
+                                BorderColor3 = FromRGB(0, 0, 0),
+                                Size = UDim2New(0, 6, 0, 6),
+                                Position = UDim2New(1, -4, 1, -4),
                 Name = "\0",
-				BorderSizePixel = 0,
-				BackgroundTransparency = 1,
+                                BorderSizePixel = 0,
+                                BackgroundTransparency = 1,
                 ZIndex = 5,
-				AutoButtonColor = false,
+                                AutoButtonColor = false,
                 Visible = true,
-			})  ResizeButton:AddToTheme({ImageColor3 = "Accent"})
+                        })  ResizeButton:AddToTheme({ImageColor3 = "Accent"})
 
             local InputChanged
 
@@ -741,7 +741,7 @@ local Library do
         self.ThemeMap[Item] = ThemeData
     end
 
-	Library.ToRich = function(self, Text, Color)
+        Library.ToRich = function(self, Text, Color)
         if not Color then
             return `<font color="rgb(255, 255, 255)">{Text}</font>`
         end
@@ -750,8 +750,8 @@ local Library do
             return `<font color="rgb(255, 255, 255)">{Text}</font>`
         end
 
-		return `<font color="rgb({MathFloor(Color.R * 255)}, {MathFloor(Color.G * 255)}, {MathFloor(Color.B * 255)})">{Text}</font>`
-	end
+                return `<font color="rgb({MathFloor(Color.R * 255)}, {MathFloor(Color.G * 255)}, {MathFloor(Color.B * 255)})">{Text}</font>`
+        end
 
     Library.GetConfig = function(self)
         local Config = { } 
@@ -4639,7 +4639,8 @@ local Library do
                 AnchorPoint = Vector2New(0, 0.5),
                 Position = UDim2New(0, 12, 0.5, 55),
                 BorderColor3 = FromRGB(12, 12, 12),
-                Size = UDim2New(0, 116, 0, 32),
+                Size = UDim2New(0, 116, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
                 BorderSizePixel = 2,
                 BackgroundColor3 = FromRGB(14, 17, 15)
             })  Items["KeybindList"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
