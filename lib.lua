@@ -856,10 +856,26 @@ local Library do
     end
 
     Library.LoadConfig = function(self, Config)
-        local Decoded = HttpService:JSONDecode(Config)
+        local Decoded = Config
+
+        if type(Config) == "string" then
+            local Success, Result = pcall(function()
+                return HttpService:JSONDecode(Config)
+            end)
+
+            if not Success then
+                return false, Result
+            end
+
+            Decoded = Result
+        end
+
+        if type(Decoded) ~= "table" then
+            return false, "invalid config payload"
+        end
 
         local Success, Result = Library:SafeCall(function()
-            for Index, Value in Decoded do 
+            for Index, Value in pairs(Decoded) do 
                 local SetFunction = Library.SetFlags[Index]
 
                 if not SetFunction then
@@ -896,7 +912,7 @@ local Library do
             List[Index] = FileName
         end
 
-        local IsNew = #List ~= CurrentList
+        local IsNew = #List ~= #CurrentList
 
         if not IsNew then
             for Index = 1, #List do
@@ -905,10 +921,10 @@ local Library do
                     break
                 end
             end
-        else
-            CurrentList = List
-            Element:Refresh(CurrentList)
         end
+
+        CurrentList = List
+        Element:Refresh(CurrentList)
     end
 
     Library.ChangeItemTheme = function(self, Item, Properties)
