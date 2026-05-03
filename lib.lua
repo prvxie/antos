@@ -4831,7 +4831,7 @@ local Library do
                 AutomaticSize = Enum.AutomaticSize.X,
                 TextSize = 8,
                 BackgroundColor3 = FromRGB(255, 255, 255),
-            })  Items["Count"]:AddToTheme({TextColor3 = "Sub Text"})
+            })  Items["Count"]:AddToTheme({TextColor3 = "Placeholder Text"})
             Items["Count"]:TextBorder()
 
             Instances:Create("Frame", {
@@ -4990,7 +4990,7 @@ local Library do
             Arrow.Position               = UDim2.new(1, -4, 0, 0)
             Arrow.BackgroundTransparency = 1
             Arrow.BorderSizePixel        = 0
-            Arrow.TextColor3             = Library.Theme.SubText
+            Arrow.TextColor3             = Library.Theme["Placeholder Text"]
             Arrow.TextSize               = 9
             Arrow.FontFace               = Library.Font
             Arrow.Text                   = "▾"
@@ -5053,7 +5053,7 @@ local Library do
             DUID.Position               = UDim2.new(0, 62, 0, 20)
             DUID.BackgroundTransparency = 1
             DUID.BorderSizePixel        = 0
-            DUID.TextColor3             = Library.Theme.SubText
+            DUID.TextColor3             = Library.Theme["Placeholder Text"]
             DUID.TextSize               = 8
             DUID.FontFace               = Library.Font
             DUID.Text                   = "uid: " .. tostring(player.UserId)
