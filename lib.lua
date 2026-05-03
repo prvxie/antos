@@ -900,9 +900,13 @@ local Library do
     end
 
     Library.ChangeItemTheme = function(self, Item, Properties)
+        if not Item then
+            return
+        end
+
         Item = Item.Instance or Item
 
-        if not self.ThemeMap[Item] then 
+        if not Item or not self.ThemeMap[Item] then 
             return
         end
 
