@@ -703,7 +703,20 @@ local Library do
 
     end
 
+    Library.UnloadCallbacks = {}
+
+    Library.OnUnload = function(self, Callback)
+        if type(Callback) == "function" then
+            table.insert(Library.UnloadCallbacks, Callback)
+        end
+    end
+
     Library.Unload = function(self)
+        -- Run registered unload callbacks first (e.g. config auto-save)
+        for _, Callback in Library.UnloadCallbacks do
+            pcall(Callback)
+        end
+
         for Index, Value in self.Connections do 
             Value.Connection:Disconnect()
         end
@@ -1236,13 +1249,15 @@ local Library do
             end
 
             Items["Inactive"]:Connect("MouseButton1Down", function()
-                for Index, Value in Data.Window.Pages do 
-                    if Value == Page and Page.Active then
-                        return
-                    end
+                task.spawn(function()
+                    for Index, Value in Data.Window.Pages do 
+                        if Value == Page and Page.Active then
+                            return
+                        end
 
-                    Value:Turn(Value == Page)
-                end
+                        Value:Turn(Value == Page)
+                    end
+                end)
             end)
 
             Items["Inactive"]:OnHover(function()
@@ -1471,13 +1486,15 @@ local Library do
             end
 
             Items["Inactive"]:Connect("MouseButton1Down", function()
-                for Index, Value in Data.Page.SubPages do 
-                    if Value == SubPage and SubPage.Active then
-                        return
-                    end
+                task.spawn(function()
+                    for Index, Value in Data.Page.SubPages do 
+                        if Value == SubPage and SubPage.Active then
+                            return
+                        end
 
-                    Value:Turn(Value == SubPage)
-                end
+                        Value:Turn(Value == SubPage)
+                    end
+                end)
             end)
 
             if #Data.Page.SubPages == 0 then 
