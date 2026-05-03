@@ -4756,6 +4756,581 @@ local Library do
         return KeybindList
     end
 
+    -- ── PlayerList external widget ────────────────────────────────────────────
+    Library.PlayerList = function(self, Window)
+        local PlayerList = { }
+
+        local Items = { } do
+            Items["Frame"] = Instances:Create("Frame", {
+                Parent = Library.Holder.Instance,
+                Name = "\0",
+                AnchorPoint = Vector2New(0, 0.5),
+                Position = UDim2New(0, 12, 0.5, 80),
+                BorderColor3 = FromRGB(12, 12, 12),
+                BorderSizePixel = 2,
+                Size = UDim2New(0, 185, 0, 0),
+                AutomaticSize = Enum.AutomaticSize.Y,
+                BackgroundColor3 = FromRGB(14, 17, 15),
+                Visible = false,
+            })  Items["Frame"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
+
+            Items["Frame"]:MakeDraggable()
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                Color = FromRGB(42, 49, 45),
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            }):AddToTheme({Color = "Outline"})
+
+            Instances:Create("Frame", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                Size = UDim2New(1, 0, 0, 1),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(202, 243, 255),
+            }):AddToTheme({BackgroundColor3 = "Accent"})
+
+            Instances:Create("UIPadding", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                PaddingTop = UDimNew(0, 8),
+                PaddingBottom = UDimNew(0, 8),
+                PaddingLeft = UDimNew(0, 8),
+                PaddingRight = UDimNew(0, 8),
+            })
+
+            Items["Title"] = Instances:Create("TextLabel", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(235, 235, 235),
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = "Players",
+                Size = UDim2New(0, 0, 0, 13),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                AutomaticSize = Enum.AutomaticSize.X,
+                TextSize = 9,
+                BackgroundColor3 = FromRGB(255, 255, 255),
+            })  Items["Title"]:AddToTheme({TextColor3 = "Text"})
+            Items["Title"]:TextBorder()
+
+            Items["Count"] = Instances:Create("TextLabel", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(185, 185, 185),
+                BorderColor3 = FromRGB(0, 0, 0),
+                Text = "0 players",
+                Position = UDim2New(0, 0, 0, 15),
+                Size = UDim2New(0, 0, 0, 11),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                AutomaticSize = Enum.AutomaticSize.X,
+                TextSize = 8,
+                BackgroundColor3 = FromRGB(255, 255, 255),
+            })  Items["Count"]:AddToTheme({TextColor3 = "Sub Text"})
+            Items["Count"]:TextBorder()
+
+            Instances:Create("Frame", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                Position = UDim2New(0, -8, 0, 30),
+                Size = UDim2New(1, 16, 0, 1),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(42, 49, 45),
+            }):AddToTheme({BackgroundColor3 = "Outline"})
+
+            local Scroll = Instance.new("ScrollingFrame", Items["Frame"].Instance)
+            Scroll.Position                = UDim2.new(0, -8, 0, 36)
+            Scroll.Size                    = UDim2.new(1, 16, 0, 210)
+            Scroll.CanvasSize              = UDim2.new(0, 0, 0, 0)
+            Scroll.AutomaticCanvasSize     = Enum.AutomaticSize.Y
+            Scroll.ScrollBarThickness      = 2
+            Scroll.ScrollBarImageColor3    = FromRGB(202, 243, 255)
+            Scroll.BackgroundTransparency  = 1
+            Scroll.BorderSizePixel         = 0
+            Scroll.ClipsDescendants        = true
+
+            local ListLayout = Instance.new("UIListLayout", Scroll)
+            ListLayout.Padding   = UDim.new(0, 2)
+            ListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+            Items["Scroll"] = Scroll
+        end
+
+        local DETAIL_H      = 68
+        local PlayerEntries = { }
+        local ExpandedEntry = nil
+
+        local function PLTween(inst, props, t)
+            game:GetService("TweenService"):Create(inst,
+                TweenInfo.new(t or 0.13, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), props):Play()
+        end
+
+        local function UpdateCount()
+            local n = 0
+            for _ in PlayerEntries do n = n + 1 end
+            Items["Count"].Instance.Text = tostring(n) .. (n == 1 and " player" or " players")
+        end
+
+        local function MakePLBtn(parent, text, callback)
+            local Btn = Instance.new("TextButton", parent)
+            Btn.BackgroundColor3 = Library.Theme.Element
+            Btn.BorderSizePixel  = 2
+            Btn.BorderColor3     = Library.Theme.Border
+            Btn.AutoButtonColor  = false
+            Btn.Text             = ""
+            Btn.Size             = UDim2.new(1, 0, 1, 0)
+
+            local s = Instance.new("UIStroke", Btn)
+            s.Color = Library.Theme.Outline
+            s.LineJoinMode    = Enum.LineJoinMode.Miter
+            s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+            local g = Instance.new("UIGradient", Btn)
+            g.Rotation = -165
+            g.Color = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                ColorSequenceKeypoint.new(1, Library.Theme.Gradient),
+            })
+
+            local lbl = Instance.new("TextLabel", Btn)
+            lbl.Size                   = UDim2.new(1, 0, 1, 0)
+            lbl.BackgroundTransparency = 1
+            lbl.TextColor3             = Library.Theme.Text
+            lbl.TextSize               = 8
+            lbl.FontFace               = Library.Font
+            lbl.Text                   = text
+
+            local ls = Instance.new("UIStroke", lbl)
+            ls.Transparency = 0.6 ; ls.Thickness = 1
+
+            Btn.MouseEnter:Connect(function()
+                PLTween(Btn, {BackgroundColor3 = Library.Theme["Hovered Element"]})
+            end)
+            Btn.MouseLeave:Connect(function()
+                PLTween(Btn, {BackgroundColor3 = Library.Theme.Element})
+            end)
+            Btn.MouseButton1Click:Connect(function()
+                PLTween(Btn, {BackgroundColor3 = Library.Theme.Accent}, 0.08)
+                task.delay(0.12, function() PLTween(Btn, {BackgroundColor3 = Library.Theme.Element}, 0.08) end)
+                task.spawn(pcall, callback)
+            end)
+        end
+
+        local function BuildPLEntry(player)
+            if PlayerEntries[player.UserId] then return end
+
+            local Container = Instance.new("Frame", Items["Scroll"])
+            Container.Name                 = tostring(player.UserId)
+            Container.Size                 = UDim2.new(1, 0, 0, 32)
+            Container.BackgroundTransparency = 1
+            Container.BorderSizePixel      = 0
+            Container.ClipsDescendants     = false
+
+            -- Card row
+            local Card = Instance.new("Frame", Container)
+            Card.Size             = UDim2.new(1, 0, 0, 32)
+            Card.BackgroundColor3 = Library.Theme.Element
+            Card.BorderSizePixel  = 2
+            Card.BorderColor3     = Library.Theme.Border
+            Card.Active           = true
+
+            do
+                local cs = Instance.new("UIStroke", Card)
+                cs.Color = Library.Theme.Outline
+                cs.LineJoinMode    = Enum.LineJoinMode.Miter
+                cs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+
+                local cg = Instance.new("UIGradient", Card)
+                cg.Rotation = -165
+                cg.Color = ColorSequence.new({
+                    ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1)),
+                    ColorSequenceKeypoint.new(1, Library.Theme.Gradient),
+                })
+            end
+
+            local SmAv = Instance.new("ImageLabel", Card)
+            SmAv.Size             = UDim2.new(0, 22, 0, 22)
+            SmAv.Position         = UDim2.new(0, 5, 0.5, -11)
+            SmAv.BackgroundColor3 = Library.Theme.Background
+            SmAv.BorderSizePixel  = 0
+            SmAv.ScaleType        = Enum.ScaleType.Fit
+            SmAv.Image            = "rbxasset://textures/ui/GuiImagePlaceholder.png"
+            Instance.new("UICorner", SmAv).CornerRadius = UDim.new(1, 0)
+
+            task.spawn(function()
+                local ok, img = pcall(Players.GetUserThumbnailAsync, Players,
+                    player.UserId, Enum.ThumbnailType.HeadShot, Enum.ThumbnailSize.Size60x60)
+                if ok and SmAv.Parent then SmAv.Image = img end
+            end)
+
+            local NameLbl = Instance.new("TextLabel", Card)
+            NameLbl.Size                   = UDim2.new(1, -44, 1, 0)
+            NameLbl.Position               = UDim2.new(0, 33, 0, 0)
+            NameLbl.BackgroundTransparency = 1
+            NameLbl.BorderSizePixel        = 0
+            NameLbl.TextColor3             = (player == LocalPlayer) and Library.Theme.Accent or Library.Theme.Text
+            NameLbl.TextSize               = 9
+            NameLbl.FontFace               = Library.Font
+            NameLbl.Text                   = player.Name
+            NameLbl.TextXAlignment         = Enum.TextXAlignment.Left
+            NameLbl.TextTruncate           = Enum.TextTruncate.AtEnd
+            do
+                local ns = Instance.new("UIStroke", NameLbl)
+                ns.Transparency = 0.6 ; ns.Thickness = 1
+            end
+
+            local Arrow = Instance.new("TextLabel", Card)
+            Arrow.Size                   = UDim2.new(0, 12, 1, 0)
+            Arrow.AnchorPoint            = Vector2.new(1, 0)
+            Arrow.Position               = UDim2.new(1, -4, 0, 0)
+            Arrow.BackgroundTransparency = 1
+            Arrow.BorderSizePixel        = 0
+            Arrow.TextColor3             = Library.Theme.SubText
+            Arrow.TextSize               = 9
+            Arrow.FontFace               = Library.Font
+            Arrow.Text                   = "▾"
+            do
+                local as = Instance.new("UIStroke", Arrow)
+                as.Transparency = 0.6 ; as.Thickness = 1
+            end
+
+            -- Details panel
+            local Details = Instance.new("Frame", Container)
+            Details.Size             = UDim2.new(1, 0, 0, 0)
+            Details.Position         = UDim2.new(0, 0, 0, 34)
+            Details.BackgroundColor3 = Library.Theme.Inline
+            Details.BorderSizePixel  = 2
+            Details.BorderColor3     = Library.Theme.Border
+            Details.ClipsDescendants = true
+            Details.Visible          = false
+            do
+                local ds = Instance.new("UIStroke", Details)
+                ds.Color = Library.Theme.Outline
+                ds.LineJoinMode    = Enum.LineJoinMode.Miter
+                ds.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            end
+
+            local BigAv = Instance.new("ImageLabel", Details)
+            BigAv.Size             = UDim2.new(0, 50, 0, 50)
+            BigAv.Position         = UDim2.new(0, 6, 0, 6)
+            BigAv.BackgroundColor3 = Library.Theme.Background
+            BigAv.BorderSizePixel  = 0
+            BigAv.ScaleType        = Enum.ScaleType.Fit
+            BigAv.Image            = SmAv.Image
+            Instance.new("UICorner", BigAv).CornerRadius = UDim.new(0, 4)
+            do
+                local bs = Instance.new("UIStroke", BigAv)
+                bs.Color = Library.Theme.Outline
+                bs.LineJoinMode    = Enum.LineJoinMode.Miter
+                bs.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            end
+            task.spawn(function()
+                local ok, img = pcall(Players.GetUserThumbnailAsync, Players,
+                    player.UserId, Enum.ThumbnailType.AvatarBust, Enum.ThumbnailSize.Size420x420)
+                if ok and BigAv.Parent then BigAv.Image = img end
+            end)
+
+            local DName = Instance.new("TextLabel", Details)
+            DName.Size                   = UDim2.new(1, -66, 0, 12)
+            DName.Position               = UDim2.new(0, 62, 0, 6)
+            DName.BackgroundTransparency = 1
+            DName.BorderSizePixel        = 0
+            DName.TextColor3             = Library.Theme.Text
+            DName.TextSize               = 9
+            DName.FontFace               = Library.Font
+            DName.Text                   = player.Name
+            DName.TextXAlignment         = Enum.TextXAlignment.Left
+            DName.TextTruncate           = Enum.TextTruncate.AtEnd
+            do local ns = Instance.new("UIStroke", DName) ; ns.Transparency = 0.6 ; ns.Thickness = 1 end
+
+            local DUID = Instance.new("TextLabel", Details)
+            DUID.Size                   = UDim2.new(1, -66, 0, 10)
+            DUID.Position               = UDim2.new(0, 62, 0, 20)
+            DUID.BackgroundTransparency = 1
+            DUID.BorderSizePixel        = 0
+            DUID.TextColor3             = Library.Theme.SubText
+            DUID.TextSize               = 8
+            DUID.FontFace               = Library.Font
+            DUID.Text                   = "uid: " .. tostring(player.UserId)
+            DUID.TextXAlignment         = Enum.TextXAlignment.Left
+            do local us = Instance.new("UIStroke", DUID) ; us.Transparency = 0.6 ; us.Thickness = 1 end
+
+            local BtnRow = Instance.new("Frame", Details)
+            BtnRow.Size             = UDim2.new(1, -66, 0, 20)
+            BtnRow.Position         = UDim2.new(0, 62, 0, 36)
+            BtnRow.BackgroundTransparency = 1
+            BtnRow.BorderSizePixel  = 0
+            do
+                local bl = Instance.new("UIListLayout", BtnRow)
+                bl.FillDirection  = Enum.FillDirection.Horizontal
+                bl.HorizontalFlex = Enum.UIFlexAlignment.Fill
+                bl.Padding        = UDim.new(0, 3)
+                bl.SortOrder      = Enum.SortOrder.LayoutOrder
+            end
+
+            local Workspace = game:GetService("Workspace")
+            MakePLBtn(BtnRow, "tp", function()
+                local c = player.Character ; local lc = LocalPlayer.Character
+                if c and lc and c:FindFirstChild("HumanoidRootPart") and lc:FindFirstChild("HumanoidRootPart") then
+                    lc.HumanoidRootPart.CFrame = c.HumanoidRootPart.CFrame
+                end
+            end)
+            MakePLBtn(BtnRow, "spec", function()
+                local c = player.Character
+                if c and c:FindFirstChild("Humanoid") then
+                    Workspace.CurrentCamera.CameraSubject = c.Humanoid
+                end
+            end)
+            MakePLBtn(BtnRow, "uid", function()
+                pcall(setclipboard, tostring(player.UserId))
+            end)
+
+            local Expanded = false
+
+            local function PLCollapse()
+                if not Expanded then return end
+                Expanded = false
+                Arrow.Text = "▾"
+                PLTween(Card,    {BackgroundColor3 = Library.Theme.Element})
+                PLTween(Details, {Size = UDim2.new(1, 0, 0, 0)}, 0.13)
+                task.delay(0.14, function()
+                    if not Expanded and Details.Parent then Details.Visible = false end
+                end)
+                Container.Size = UDim2.new(1, 0, 0, 32)
+                if ExpandedEntry == Container then ExpandedEntry = nil end
+            end
+
+            local function PLExpand()
+                if Expanded then return end
+                if ExpandedEntry and ExpandedEntry ~= Container then
+                    local prev = PlayerEntries[tonumber(ExpandedEntry.Name)]
+                    if prev then prev.Collapse() end
+                end
+                Expanded      = true
+                Arrow.Text    = "▴"
+                ExpandedEntry = Container
+                Details.Visible = true
+                Details.Size    = UDim2.new(1, 0, 0, 0)
+                Container.Size  = UDim2.new(1, 0, 0, 32 + 2 + DETAIL_H)
+                PLTween(Details, {Size = UDim2.new(1, 0, 0, DETAIL_H)}, 0.15)
+                PLTween(Card,    {BackgroundColor3 = Library.Theme["Hovered Element"]})
+            end
+
+            Card.InputBegan:Connect(function(input)
+                if input.UserInputType == Enum.UserInputType.MouseButton1 then
+                    if Expanded then PLCollapse() else PLExpand() end
+                end
+            end)
+            Card.MouseEnter:Connect(function()
+                if not Expanded then PLTween(Card, {BackgroundColor3 = Library.Theme["Hovered Element"]}) end
+            end)
+            Card.MouseLeave:Connect(function()
+                if not Expanded then PLTween(Card, {BackgroundColor3 = Library.Theme.Element}) end
+            end)
+
+            PlayerEntries[player.UserId] = {Container = Container, Collapse = PLCollapse}
+            UpdateCount()
+        end
+
+        local function RemovePLEntry(player)
+            local e = PlayerEntries[player.UserId]
+            if e then
+                if e.Container and e.Container.Parent then e.Container:Destroy() end
+                PlayerEntries[player.UserId] = nil
+                UpdateCount()
+            end
+        end
+
+        for _, p in Players:GetPlayers() do task.spawn(BuildPLEntry, p) end
+        Players.PlayerAdded:Connect(BuildPLEntry)
+        Players.PlayerRemoving:Connect(RemovePLEntry)
+
+        -- Sync visibility: only visible when main window is open
+        TableInsert(Window.ToggleListeners, function(isOpen)
+            Items["Frame"].Instance.Visible = isOpen
+        end)
+        Items["Frame"].Instance.Visible = Window.IsOpen
+
+        function PlayerList:SetVisibility(Bool)
+            Items["Frame"].Instance.Visible = Bool
+        end
+
+        return PlayerList
+    end
+
+    -- ── ESPPreview — stuck to right side of main window ───────────────────────
+    Library.ESPPreview = function(self, Window)
+        local ESPPreview = { }
+        local WindowFrame = Window.Items["Window"].Instance
+
+        local Items = { } do
+            Items["Frame"] = Instances:Create("Frame", {
+                Parent = Library.Holder.Instance,
+                Name = "\0",
+                AnchorPoint = Vector2New(0, 0),
+                Position = UDim2New(0, 0, 0, 0),
+                BorderColor3 = FromRGB(12, 12, 12),
+                BorderSizePixel = 2,
+                Size = UDim2New(0, 164, 0, 539),
+                BackgroundColor3 = FromRGB(14, 17, 15),
+                Visible = false,
+            })  Items["Frame"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
+
+            Instances:Create("UIStroke", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                Color = FromRGB(42, 49, 45),
+                LineJoinMode = Enum.LineJoinMode.Miter,
+                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+            }):AddToTheme({Color = "Outline"})
+
+            Instances:Create("Frame", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                Size = UDim2New(1, 0, 0, 1),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(202, 243, 255),
+            }):AddToTheme({BackgroundColor3 = "Accent"})
+
+            Items["TitleLbl"] = Instances:Create("TextLabel", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                FontFace = Library.Font,
+                TextColor3 = FromRGB(235, 235, 235),
+                Text = "esp preview",
+                Position = UDim2New(0, 8, 0, 5),
+                Size = UDim2New(0, 0, 0, 12),
+                BackgroundTransparency = 1,
+                BorderSizePixel = 0,
+                AutomaticSize = Enum.AutomaticSize.X,
+                TextSize = 9,
+                BackgroundColor3 = FromRGB(255, 255, 255),
+            })  Items["TitleLbl"]:AddToTheme({TextColor3 = "Text"})
+            Items["TitleLbl"]:TextBorder()
+
+            Instances:Create("Frame", {
+                Parent = Items["Frame"].Instance,
+                Name = "\0",
+                Position = UDim2New(0, 0, 0, 21),
+                Size = UDim2New(1, 0, 0, 1),
+                BorderSizePixel = 0,
+                BackgroundColor3 = FromRGB(42, 49, 45),
+            }):AddToTheme({BackgroundColor3 = "Outline"})
+
+            -- Dark viewport area
+            local Viewport = Instance.new("Frame", Items["Frame"].Instance)
+            Viewport.Position            = UDim2.new(0, 0, 0, 23)
+            Viewport.Size                = UDim2.new(1, 0, 1, -23)
+            Viewport.BackgroundColor3    = FromRGB(8, 10, 9)
+            Viewport.BorderSizePixel     = 0
+            Viewport.ClipsDescendants    = true
+            Items["Viewport"] = Viewport
+
+            -- Crosshair centre dot
+            local Cross = Instance.new("Frame", Viewport)
+            Cross.AnchorPoint      = Vector2.new(0.5, 0.5)
+            Cross.Position         = UDim2.new(0.5, 0, 0.5, 0)
+            Cross.Size             = UDim2.new(0, 4, 0, 4)
+            Cross.BackgroundColor3 = FromRGB(202, 243, 255)
+            Cross.BorderSizePixel  = 0
+            Instance.new("UICorner", Cross).CornerRadius = UDim.new(1, 0)
+
+            -- Helper: draw a fake ESP box
+            local function FakeBox(name, dist, x, y, w, h, col)
+                col = col or FromRGB(202, 243, 255)
+                local Box = Instance.new("Frame", Viewport)
+                Box.Size             = UDim2.new(0, w, 0, h)
+                Box.Position         = UDim2.new(0, x, 0, y)
+                Box.BackgroundTransparency = 1
+                Box.BorderSizePixel  = 0
+
+                local function Seg(ax, ay, aw, ah)
+                    local f = Instance.new("Frame", Box)
+                    f.Position         = UDim2.new(0, ax, 0, ay)
+                    f.Size             = UDim2.new(0, aw, 0, ah)
+                    f.BackgroundColor3 = col
+                    f.BorderSizePixel  = 0
+                end
+                Seg(0, 0, w, 1) ; Seg(0, h-1, w, 1)
+                Seg(0, 0, 1, h) ; Seg(w-1, 0, 1, h)
+
+                local Lbl = Instance.new("TextLabel", Box)
+                Lbl.Size = UDim2.new(1, 0, 0, 9) ; Lbl.Position = UDim2.new(0, 0, 0, -10)
+                Lbl.BackgroundTransparency = 1 ; Lbl.BorderSizePixel = 0
+                Lbl.TextColor3 = col ; Lbl.TextSize = 7 ; Lbl.Font = Enum.Font.Code
+                Lbl.Text = name ; Lbl.TextXAlignment = Enum.TextXAlignment.Center
+                do local ls = Instance.new("UIStroke", Lbl) ; ls.Transparency = 0.3 ; ls.Thickness = 1 end
+
+                local Dist = Instance.new("TextLabel", Box)
+                Dist.Size = UDim2.new(1, 0, 0, 8) ; Dist.Position = UDim2.new(0, 0, 1, 2)
+                Dist.BackgroundTransparency = 1 ; Dist.BorderSizePixel = 0
+                Dist.TextColor3 = FromRGB(170, 170, 170) ; Dist.TextSize = 6
+                Dist.Font = Enum.Font.Code ; Dist.Text = dist
+                Dist.TextXAlignment = Enum.TextXAlignment.Center
+                do local ds = Instance.new("UIStroke", Dist) ; ds.Transparency = 0.5 ; ds.Thickness = 1 end
+
+                local HpBg = Instance.new("Frame", Box)
+                HpBg.Position = UDim2.new(0, -4, 0, 0) ; HpBg.Size = UDim2.new(0, 2, 1, 0)
+                HpBg.BackgroundColor3 = FromRGB(18, 18, 18) ; HpBg.BorderSizePixel = 0
+                local HpF = Instance.new("Frame", HpBg)
+                HpF.AnchorPoint = Vector2.new(0, 1) ; HpF.Position = UDim2.new(0, 0, 1, 0)
+                HpF.Size = UDim2.new(1, 0, 0.7, 0)
+                HpF.BackgroundColor3 = FromRGB(80, 200, 100) ; HpF.BorderSizePixel = 0
+            end
+
+            FakeBox("Player1",  "42m",  14, 55,  26, 52, FromRGB(202, 243, 255))
+            FakeBox("EnemyA",   "87m",  58, 82,  20, 40, FromRGB(255, 85,  85))
+            FakeBox("Player2",  "15m",  100, 40, 30, 60, FromRGB(202, 243, 255))
+            FakeBox("EnemyB",   "130m", 22, 155, 16, 30, FromRGB(255, 85,  85))
+
+            local Watermark = Instance.new("TextLabel", Viewport)
+            Watermark.AnchorPoint            = Vector2.new(1, 1)
+            Watermark.Position               = UDim2.new(1, -4, 1, -4)
+            Watermark.BackgroundTransparency = 1
+            Watermark.BorderSizePixel        = 0
+            Watermark.TextColor3             = FromRGB(80, 80, 80)
+            Watermark.TextSize               = 6
+            Watermark.Font                   = Enum.Font.Code
+            Watermark.Text                   = "preview"
+            Watermark.AutomaticSize          = Enum.AutomaticSize.XY
+        end
+
+        -- Track window position every frame and stick to its right edge
+        local StepConn = RunService.RenderStepped:Connect(function()
+            if not WindowFrame.Parent then
+                StepConn:Disconnect()
+                return
+            end
+            local visible = WindowFrame.Visible
+            Items["Frame"].Instance.Visible = visible
+            if visible then
+                local pos = WindowFrame.AbsolutePosition
+                local sz  = WindowFrame.AbsoluteSize
+                Items["Frame"].Instance.Position = UDim2.new(0, pos.X + sz.X + 4, 0, pos.Y)
+                Items["Frame"].Instance.Size     = UDim2.new(0, 164, 0, sz.Y)
+                Items["Viewport"].Size           = UDim2.new(1, 0, 1, -23)
+            end
+        end)
+
+        function ESPPreview:SetVisibility(Bool)
+            Items["Frame"].Instance.Visible = Bool
+        end
+
+        function ESPPreview:Destroy()
+            if StepConn then StepConn:Disconnect() end
+            if Items["Frame"] and Items["Frame"].Instance then
+                Items["Frame"].Instance:Destroy()
+            end
+        end
+
+        return ESPPreview
+    end
+
     Library.Notification = function(self, Title, Description, Duration)
         local Items = { } do 
             Items["Notification"] = Instances:Create("Frame", {
@@ -5198,6 +5773,7 @@ local Library do
             Items = { },
 
             IsOpen = false,
+            ToggleListeners = { },
         }
 
         local Items = Components:Window({
@@ -5436,6 +6012,10 @@ local Library do
             end
 
             Window.IsOpen = Bool
+
+            for _, Fn in Window.ToggleListeners do
+                pcall(Fn, Bool)
+            end
 
             Debounce = true 
 
