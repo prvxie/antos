@@ -6611,6 +6611,11 @@ local Library do
                         end
                     end)
 
+                    LoadAndSaveButton:Add("Refresh", function()
+                        Library:RefreshConfigsList(ConfigsSearchbox)
+                        Library:Notification("Success", "Refreshed configs list", 3)
+                    end)
+
                     Library:RefreshConfigsList(ConfigsSearchbox)
                 end
             end
