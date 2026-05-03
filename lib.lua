@@ -856,26 +856,9 @@ local Library do
     end
 
     Library.LoadConfig = function(self, Config)
-        local Decoded = Config
-
-        if type(Config) == "string" then
-            local Success, Result = pcall(function()
-                return HttpService:JSONDecode(Config)
-            end)
-
-            if not Success then
-                return false, Result
-            end
-
-            Decoded = Result
-        end
-
-        if type(Decoded) ~= "table" then
-            return false, "invalid config payload"
-        end
-
+        local Decoded = HttpService:JSONDecode(Config)
         local Success, Result = Library:SafeCall(function()
-            for Index, Value in pairs(Decoded) do 
+            for Index, Value in pairs(Decoded) do
                 local SetFunction = Library.SetFlags[Index]
 
                 if not SetFunction then
@@ -902,7 +885,6 @@ local Library do
     end
 
     Library.RefreshConfigsList = function(self, Element)
-        local CurrentList = { }
         local List = { }
 
         local ConfigFolderName = StringGSub(Library.Folders.Configs, Library.Folders.Directory .. "/", "")
@@ -912,19 +894,9 @@ local Library do
             List[Index] = FileName
         end
 
-        local IsNew = #List ~= #CurrentList
-
-        if not IsNew then
-            for Index = 1, #List do
-                if List[Index] ~= CurrentList[Index] then
-                    IsNew = true
-                    break
-                end
-            end
+        if Element and Element.Refresh then
+            Element:Refresh(List)
         end
-
-        CurrentList = List
-        Element:Refresh(CurrentList)
     end
 
     Library.ChangeItemTheme = function(self, Item, Properties)
@@ -6611,6 +6583,7 @@ local Library do
                         if ConfigSelected then
                             Library:DeleteConfig(ConfigSelected)
                             Library:Notification("Success", "Deleted config "..ConfigSelected .. " succesfully", 5)
+                            ConfigSelected = nil
                             Library:RefreshConfigsList(ConfigsSearchbox)
                         end
                     end)
@@ -6623,6 +6596,7 @@ local Library do
 
                             if Success then 
                                 Library:Notification("Success", "Loaded config "..ConfigSelected .. " succesfully", 5)
+                                Library:RefreshConfigsList(ConfigsSearchbox)
                             else
                                 Library:Notification("Error", "Failed to load config "..ConfigSelected .. " report this to the devs:\n"..Result, 5)
                             end
