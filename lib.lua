@@ -6596,13 +6596,23 @@ local Library do
 
                     LoadAndSaveButton:Add("Load", function()
                         if ConfigSelected then
-                            local Success, Result = Library:LoadConfig(readfile(Library.Folders.Configs .. "/" .. ConfigSelected))
+                            local SelectedPath = ConfigSelected
+                            if not string.find(SelectedPath, "%.json$") then
+                                SelectedPath = SelectedPath .. ".json"
+                            end
+                            local FullPath = Library.Folders.Configs .. "/" .. SelectedPath
+                            if not isfile(FullPath) then
+                                Library:Notification("Error", "Config file not found: "..SelectedPath, 4)
+                                Library:RefreshConfigsList(ConfigsSearchbox)
+                                return
+                            end
+                            local Success, Result = Library:LoadConfig(readfile(FullPath))
 
                             if Success then 
-                                Library:Notification("Success", "Loaded config "..ConfigSelected .. " succesfully", 5)
+                                Library:Notification("Success", "Loaded config "..SelectedPath .. " succesfully", 5)
                                 Library:RefreshConfigsList(ConfigsSearchbox)
                             else
-                                Library:Notification("Error", "Failed to load config "..ConfigSelected .. " report this to the devs:\n"..Result, 5)
+                                Library:Notification("Error", "Failed to load config "..SelectedPath .. " report this to the devs:\n"..Result, 5)
                             end
                         end
                     end)
