@@ -5163,172 +5163,9 @@ local Library do
         return PlayerList
     end
 
-    -- ── ESPPreview — stuck to right side of main window ───────────────────────
+    -- ── ESPPreview removed ────────────────────────────────────────────────────
     Library.ESPPreview = function(self, Window)
-        local ESPPreview = { }
-        local WindowFrame = Window.Items["Window"].Instance
-
-        local Items = { } do
-            Items["Frame"] = Instances:Create("Frame", {
-                Parent = Library.Holder.Instance,
-                Name = "\0",
-                AnchorPoint = Vector2New(0, 0),
-                Position = UDim2New(0, 0, 0, 0),
-                BorderColor3 = FromRGB(12, 12, 12),
-                BorderSizePixel = 2,
-                Size = UDim2New(0, 164, 0, 539),
-                BackgroundColor3 = FromRGB(14, 17, 15),
-                Visible = false,
-            })  Items["Frame"]:AddToTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
-
-            Instances:Create("UIStroke", {
-                Parent = Items["Frame"].Instance,
-                Name = "\0",
-                Color = FromRGB(42, 49, 45),
-                LineJoinMode = Enum.LineJoinMode.Miter,
-                ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-            }):AddToTheme({Color = "Outline"})
-
-            Instances:Create("Frame", {
-                Parent = Items["Frame"].Instance,
-                Name = "\0",
-                Size = UDim2New(1, 0, 0, 1),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(202, 243, 255),
-            }):AddToTheme({BackgroundColor3 = "Accent"})
-
-            Items["TitleLbl"] = Instances:Create("TextLabel", {
-                Parent = Items["Frame"].Instance,
-                Name = "\0",
-                FontFace = Library.Font,
-                TextColor3 = FromRGB(235, 235, 235),
-                Text = "esp preview",
-                Position = UDim2New(0, 8, 0, 5),
-                Size = UDim2New(0, 0, 0, 12),
-                BackgroundTransparency = 1,
-                BorderSizePixel = 0,
-                AutomaticSize = Enum.AutomaticSize.X,
-                TextSize = 9,
-                BackgroundColor3 = FromRGB(255, 255, 255),
-            })  Items["TitleLbl"]:AddToTheme({TextColor3 = "Text"})
-            Items["TitleLbl"]:TextBorder()
-
-            Instances:Create("Frame", {
-                Parent = Items["Frame"].Instance,
-                Name = "\0",
-                Position = UDim2New(0, 0, 0, 21),
-                Size = UDim2New(1, 0, 0, 1),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(42, 49, 45),
-            }):AddToTheme({BackgroundColor3 = "Outline"})
-
-            -- Dark viewport area
-            local Viewport = Instance.new("Frame", Items["Frame"].Instance)
-            Viewport.Position            = UDim2.new(0, 0, 0, 23)
-            Viewport.Size                = UDim2.new(1, 0, 1, -23)
-            Viewport.BackgroundColor3    = FromRGB(8, 10, 9)
-            Viewport.BorderSizePixel     = 0
-            Viewport.ClipsDescendants    = true
-            Items["Viewport"] = Viewport
-
-            -- Crosshair centre dot
-            local Cross = Instance.new("Frame", Viewport)
-            Cross.AnchorPoint      = Vector2.new(0.5, 0.5)
-            Cross.Position         = UDim2.new(0.5, 0, 0.5, 0)
-            Cross.Size             = UDim2.new(0, 4, 0, 4)
-            Cross.BackgroundColor3 = FromRGB(202, 243, 255)
-            Cross.BorderSizePixel  = 0
-            Instance.new("UICorner", Cross).CornerRadius = UDim.new(1, 0)
-
-            -- Helper: draw a fake ESP box
-            local function FakeBox(name, dist, x, y, w, h, col)
-                col = col or FromRGB(202, 243, 255)
-                local Box = Instance.new("Frame", Viewport)
-                Box.Size             = UDim2.new(0, w, 0, h)
-                Box.Position         = UDim2.new(0, x, 0, y)
-                Box.BackgroundTransparency = 1
-                Box.BorderSizePixel  = 0
-
-                local function Seg(ax, ay, aw, ah)
-                    local f = Instance.new("Frame", Box)
-                    f.Position         = UDim2.new(0, ax, 0, ay)
-                    f.Size             = UDim2.new(0, aw, 0, ah)
-                    f.BackgroundColor3 = col
-                    f.BorderSizePixel  = 0
-                end
-                Seg(0, 0, w, 1) ; Seg(0, h-1, w, 1)
-                Seg(0, 0, 1, h) ; Seg(w-1, 0, 1, h)
-
-                local Lbl = Instance.new("TextLabel", Box)
-                Lbl.Size = UDim2.new(1, 0, 0, 9) ; Lbl.Position = UDim2.new(0, 0, 0, -10)
-                Lbl.BackgroundTransparency = 1 ; Lbl.BorderSizePixel = 0
-                Lbl.TextColor3 = col ; Lbl.TextSize = 7 ; Lbl.Font = Enum.Font.Code
-                Lbl.Text = name ; Lbl.TextXAlignment = Enum.TextXAlignment.Center
-                do local ls = Instance.new("UIStroke", Lbl) ; ls.Transparency = 0.3 ; ls.Thickness = 1 end
-
-                local Dist = Instance.new("TextLabel", Box)
-                Dist.Size = UDim2.new(1, 0, 0, 8) ; Dist.Position = UDim2.new(0, 0, 1, 2)
-                Dist.BackgroundTransparency = 1 ; Dist.BorderSizePixel = 0
-                Dist.TextColor3 = FromRGB(170, 170, 170) ; Dist.TextSize = 6
-                Dist.Font = Enum.Font.Code ; Dist.Text = dist
-                Dist.TextXAlignment = Enum.TextXAlignment.Center
-                do local ds = Instance.new("UIStroke", Dist) ; ds.Transparency = 0.5 ; ds.Thickness = 1 end
-
-                local HpBg = Instance.new("Frame", Box)
-                HpBg.Position = UDim2.new(0, -4, 0, 0) ; HpBg.Size = UDim2.new(0, 2, 1, 0)
-                HpBg.BackgroundColor3 = FromRGB(18, 18, 18) ; HpBg.BorderSizePixel = 0
-                local HpF = Instance.new("Frame", HpBg)
-                HpF.AnchorPoint = Vector2.new(0, 1) ; HpF.Position = UDim2.new(0, 0, 1, 0)
-                HpF.Size = UDim2.new(1, 0, 0.7, 0)
-                HpF.BackgroundColor3 = FromRGB(80, 200, 100) ; HpF.BorderSizePixel = 0
-            end
-
-            FakeBox("Player1",  "42m",  14, 55,  26, 52, FromRGB(202, 243, 255))
-            FakeBox("EnemyA",   "87m",  58, 82,  20, 40, FromRGB(255, 85,  85))
-            FakeBox("Player2",  "15m",  100, 40, 30, 60, FromRGB(202, 243, 255))
-            FakeBox("EnemyB",   "130m", 22, 155, 16, 30, FromRGB(255, 85,  85))
-
-            local Watermark = Instance.new("TextLabel", Viewport)
-            Watermark.AnchorPoint            = Vector2.new(1, 1)
-            Watermark.Position               = UDim2.new(1, -4, 1, -4)
-            Watermark.BackgroundTransparency = 1
-            Watermark.BorderSizePixel        = 0
-            Watermark.TextColor3             = FromRGB(80, 80, 80)
-            Watermark.TextSize               = 6
-            Watermark.Font                   = Enum.Font.Code
-            Watermark.Text                   = "preview"
-            Watermark.AutomaticSize          = Enum.AutomaticSize.XY
-        end
-
-        -- Track window position every frame and stick to its right edge
-        local StepConn = RunService.RenderStepped:Connect(function()
-            if not WindowFrame.Parent then
-                StepConn:Disconnect()
-                return
-            end
-            local visible = WindowFrame.Visible
-            Items["Frame"].Instance.Visible = visible
-            if visible then
-                local pos = WindowFrame.AbsolutePosition
-                local sz  = WindowFrame.AbsoluteSize
-                Items["Frame"].Instance.Position = UDim2.new(0, pos.X + sz.X + 4, 0, pos.Y)
-                Items["Frame"].Instance.Size     = UDim2.new(0, 164, 0, sz.Y)
-                Items["Viewport"].Size           = UDim2.new(1, 0, 1, -23)
-            end
-        end)
-
-        function ESPPreview:SetVisibility(Bool)
-            Items["Frame"].Instance.Visible = Bool
-        end
-
-        function ESPPreview:Destroy()
-            if StepConn then StepConn:Disconnect() end
-            if Items["Frame"] and Items["Frame"].Instance then
-                Items["Frame"].Instance:Destroy()
-            end
-        end
-
-        return ESPPreview
+        return { SetVisibility = function() end, Destroy = function() end }
     end
 
     Library.Notification = function(self, Title, Description, Duration)
@@ -5767,7 +5604,7 @@ local Library do
         local Window = { 
             Logo = Data.Logo or Data.logo or "",
             FadeTime = Data.FadeTime or Data.fadetime or 0.4,
-            Size = Data.Size or Data.size or UDim2New(0, 751, 0, 539),
+            Size = Data.Size or Data.size or UDim2New(0, 580, 0, 700),
 
             Pages = { },
             Items = { },
@@ -5797,21 +5634,6 @@ local Library do
             Items["Side"]:Border("Border")
 
             Items["Window"].Instance.Visible = false
-
-            Items["Logo"] = Instances:Create("ImageLabel", {
-                Parent = Items["Side"].Instance,
-                Name = "\0",
-                ImageColor3 = FromRGB(202, 243, 255),
-                ScaleType = Enum.ScaleType.Fit,
-                BorderColor3 = FromRGB(0, 0, 0),
-                AnchorPoint = Vector2New(0.5, 0),
-                Image = "rbxassetid://" .. Window.Logo,
-                BackgroundTransparency = 1,
-                Position = UDim2New(0.5, 0, 0, 12),
-                Size = UDim2New(0, 75, 0, 75),
-                BorderSizePixel = 0,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["Logo"]:AddToTheme({ImageColor3 = "Accent"})
 
             Items["Search"] = Instances:Create("Frame", {
                 Parent = Items["Side"].Instance,
@@ -5874,9 +5696,9 @@ local Library do
                 Parent = Items["Side"].Instance,
                 Name = "\0",
                 BackgroundTransparency = 1,
-                Position = UDim2New(0, 0, 0, 100),
+                Position = UDim2New(0, 0, 0, 14),
                 BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(1, 0, 1, -135),
+                Size = UDim2New(1, 0, 1, -44),
                 BorderSizePixel = 0,
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
@@ -5929,39 +5751,6 @@ local Library do
                 BackgroundColor3 = FromRGB(255, 255, 255)
             })
 
-            Items["MouseBackground"] = Instances:Create("Frame", {
-                Parent = Library.Holder.Instance,
-                Name = "\0",
-                BackgroundTransparency = 1,
-                Position = UDim2New(0, 0, 0, 0),
-                BorderColor3 = FromRGB(0, 0, 0),
-                Size = UDim2New(0, 16, 0, 16),
-                BorderSizePixel = 0,
-                ZIndex = 9999,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })
-
-            Items["MouseImage"] = Instances:Create("ImageLabel", {
-                Parent = Items["MouseBackground"].Instance,
-                Name = "\0",
-                BorderColor3 = FromRGB(0, 0, 0),
-                Image = "rbxassetid://76631660114196",
-                BackgroundTransparency = 1,
-                Size = UDim2New(1, 0, 1, 0),
-                BorderSizePixel = 0,
-                ZIndex = 9999,
-                BackgroundColor3 = FromRGB(255, 255, 255)
-            })  Items["MouseImage"]:AddToTheme({ImageColor3 = "Accent"})
-
-            Instances:Create("UIGradient", {
-                Parent = Items["MouseImage"].Instance,
-                Name = "\0",
-                Rotation = 90,
-                Color = RGBSequence{RGBSequenceKeypoint(0, FromRGB(255, 255, 255)), RGBSequenceKeypoint(1, FromRGB(99, 108, 117))}
-            })
-
-            UserInputService.MouseIconEnabled = false
-
             Window.Items = Items
         end
 
@@ -5985,11 +5774,6 @@ local Library do
         Items["Input"]:OnHoverLeave(function()
             Items["Search"]:ChangeItemTheme({BackgroundColor3 = "Background", BorderColor3 = "Border"})
             Items["Search"]:Tween(nil, {BackgroundColor3 = Library.Theme.Background})
-        end)
-
-        Library:Connect(RunService.RenderStepped, function()
-            local MouseLocation = UserInputService:GetMouseLocation() 
-            Items["MouseBackground"].Instance.Position = UDim2New(0, MouseLocation.X - 1, 0, MouseLocation.Y - 56)           
         end)
 
         local OldSizes = { }
@@ -6047,13 +5831,6 @@ local Library do
             NewTween.Tween.Completed:Connect(function()
                 Debounce = false 
                 Items["Window"].Instance.Visible = Window.IsOpen
-                if Window.IsOpen then
-                    Items["MouseBackground"].Instance.Visible = true
-                    UserInputService.MouseIconEnabled = false
-                else
-                    Items["MouseBackground"].Instance.Visible = false
-                    UserInputService.MouseIconEnabled = true
-                end
             end)
         end
 
@@ -6644,7 +6421,7 @@ local Library do
         return BlankElement, Items
     end
 
-    Library.CreateSettingsPage = function(self, Window, Watermark, KeybindList)
+    Library.CreateSettingsPage = function(self, Window, Watermark, KeybindList, PlayerList)
         local SettingsPage = Window:Page({Name = "Settings", SubPages = true}) do 
             local ThemingSubPage = SettingsPage:SubPage({Name = "Theming", Columns = 2}) do 
                 local ThemesSection = ThemingSubPage:Section({Name = "Themes", Side = 1}) do
@@ -6755,6 +6532,17 @@ local Library do
                             KeybindList:SetVisibility(Value)
                         end
                     })
+
+                    if PlayerList then
+                        SettingsSection:Toggle({
+                            Name = "Player list",
+                            Flag = "PlayerList",
+                            Default = true,
+                            Callback = function(Value)
+                                PlayerList:SetVisibility(Value)
+                            end
+                        })
+                    end
 
                     SettingsSection:Slider({
                         Name = "Fade time",
