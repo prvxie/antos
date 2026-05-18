@@ -454,6 +454,24 @@ function library:window(properties)
 	})
 	library:apply_theme(accent_line, "accent", "BackgroundColor3")
 
+	local glow = library:create("ImageLabel", {
+		Parent = __holder,
+		Name = "",
+		ImageColor3 = themes.preset.accent,
+		ScaleType = Enum.ScaleType.Slice,
+		ImageTransparency = 0.85,
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Image = "http://www.roblox.com/asset/?id=18245826428",
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0, -20, 0, -20),
+		Size = UDim2.new(1, 40, 0, 42),
+		ZIndex = 2,
+		BorderSizePixel = 0,
+		SliceCenter = Rect.new(Vector2.new(21, 21), Vector2.new(79, 79)),
+	})
+	library:apply_theme(glow, "accent", "ImageColor3")
+
 	library:create("UIPadding", {
 		Parent = __holder,
 		PaddingTop = UDim.new(0, 6),
@@ -1427,6 +1445,24 @@ function library:window(properties)
 	})
 	library:apply_theme(accent_line, "accent", "BackgroundColor3")
 
+	local glow = library:create("ImageLabel", {
+		Parent = playerlist,
+		Name = "",
+		ImageColor3 = themes.preset.accent,
+		ScaleType = Enum.ScaleType.Slice,
+		ImageTransparency = 0.85,
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Image = "http://www.roblox.com/asset/?id=18245826428",
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0, -20, 0, -20),
+		Size = UDim2.new(1, 40, 0, 42),
+		ZIndex = 2,
+		BorderSizePixel = 0,
+		SliceCenter = Rect.new(Vector2.new(21, 21), Vector2.new(79, 79)),
+	})
+	library:apply_theme(glow, "accent", "ImageColor3")
+
 	local name = library:create("TextLabel", {
 		Parent = playerlist,
 		Name = "",
@@ -1536,7 +1572,7 @@ function library:window(properties)
 			Parent = TextButton,
 			Name = "Expanded",
 			Position = UDim2.new(0, 0, 0, 24),
-			Size = UDim2.new(1, 0, 0, 96),
+			Size = UDim2.new(1, 0, 0, 82),
 			BackgroundTransparency = 1,
 			Visible = false,
 			ClipsDescendants = true,
@@ -1574,7 +1610,7 @@ function library:window(properties)
 			Parent = expanded,
 			Text = "N",
 			Size = UDim2.new(0, 16, 0, 16),
-			Position = UDim2.new(0, 8, 0, 62),
+			Position = UDim2.new(0, 8, 0, 60),
 			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
 			TextColor3 = Color3.fromRGB(200, 200, 200),
 			FontFace = library.font,
@@ -1586,7 +1622,7 @@ function library:window(properties)
 			Parent = expanded,
 			Text = "F",
 			Size = UDim2.new(0, 16, 0, 16),
-			Position = UDim2.new(0, 28, 0, 62),
+			Position = UDim2.new(0, 28, 0, 60),
 			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
 			TextColor3 = Color3.fromRGB(100, 100, 255),
 			FontFace = library.font,
@@ -1598,7 +1634,7 @@ function library:window(properties)
 			Parent = expanded,
 			Text = "E",
 			Size = UDim2.new(0, 16, 0, 16),
-			Position = UDim2.new(0, 48, 0, 62),
+			Position = UDim2.new(0, 48, 0, 60),
 			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
 			TextColor3 = Color3.fromRGB(255, 100, 100),
 			FontFace = library.font,
@@ -1623,100 +1659,20 @@ function library:window(properties)
 
 		local actions = library:create("Frame", {
 			Parent = expanded,
-			Position = UDim2.new(0, 72, 0, 8),
-			Size = UDim2.new(1, -80, 1, -16),
+			Position = UDim2.new(0, 68, 0, 8),
+			Size = UDim2.new(1, -76, 0, 48),
 			BackgroundTransparency = 1,
 		})
 
 		library:create("UIListLayout", {
 			Parent = actions,
-			Padding = UDim.new(0, 4),
+			Padding = UDim.new(0, 8),
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		})
 
-		local btn_tp = library:create("TextButton", {
-			Parent = actions,
-			Size = UDim2.new(1, 0, 0, 16),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-			TextColor3 = Color3.fromRGB(200, 200, 200),
-			Text = "Teleport",
-			FontFace = library.font,
-			TextSize = 11,
-		})
-		library:create("UIStroke", { Parent = btn_tp, Color = Color3.fromRGB(57, 57, 57) })
-
-		btn_tp.MouseButton1Click:Connect(function()
-			local char = player.Character
-			local lchar = lp.Character
-			if char and lchar then
-				local root = char:FindFirstChild("HumanoidRootPart")
-				local lroot = lchar:FindFirstChild("HumanoidRootPart")
-				if root and lroot then
-					lroot.CFrame = root.CFrame + Vector3.new(2, 0, 0)
-				end
-			end
-		end)
-
-		local spec_row = library:create("Frame", {
-			Parent = actions,
-			Size = UDim2.new(1, 0, 0, 16),
-			BackgroundTransparency = 1,
-		})
-		library:create("UIListLayout", {
-			Parent = spec_row,
-			FillDirection = Enum.FillDirection.Horizontal,
-			Padding = UDim.new(0, 4),
-		})
-
-		local btn_spec = library:create("TextButton", {
-			Parent = spec_row,
-			Size = UDim2.new(0.5, -2, 1, 0),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-			TextColor3 = Color3.fromRGB(200, 200, 200),
-			Text = "Spectate",
-			FontFace = library.font,
-			TextSize = 11,
-		})
-		library:create("UIStroke", { Parent = btn_spec, Color = Color3.fromRGB(57, 57, 57) })
-
-		btn_spec.MouseButton1Click:Connect(function()
-			local char = player.Character
-			if char then
-				camera.CameraSubject = char:FindFirstChildOfClass("Humanoid") or char:FindFirstChild("HumanoidRootPart")
-				camera.CameraType = Enum.CameraType.Follow
-			end
-		end)
-
-		local btn_unspec = library:create("TextButton", {
-			Parent = spec_row,
-			Size = UDim2.new(0.5, -2, 1, 0),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-			TextColor3 = Color3.fromRGB(200, 200, 200),
-			Text = "Unspec",
-			FontFace = library.font,
-			TextSize = 11,
-		})
-		library:create("UIStroke", { Parent = btn_unspec, Color = Color3.fromRGB(57, 57, 57) })
-
-		btn_unspec.MouseButton1Click:Connect(function()
-			camera.CameraSubject = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
-			camera.CameraType = Enum.CameraType.Custom
-		end)
-
-		local copy_row = library:create("Frame", {
-			Parent = actions,
-			Size = UDim2.new(1, 0, 0, 16),
-			BackgroundTransparency = 1,
-		})
-		library:create("UIListLayout", {
-			Parent = copy_row,
-			FillDirection = Enum.FillDirection.Horizontal,
-			Padding = UDim.new(0, 4),
-		})
-
 		local btn_cpname = library:create("TextButton", {
-			Parent = copy_row,
-			Size = UDim2.new(0.5, -2, 1, 0),
+			Parent = actions,
+			Size = UDim2.new(1, 0, 0, 20),
 			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
 			TextColor3 = Color3.fromRGB(200, 200, 200),
 			Text = "Copy Name",
@@ -1733,8 +1689,8 @@ function library:window(properties)
 		end)
 
 		local btn_cpid = library:create("TextButton", {
-			Parent = copy_row,
-			Size = UDim2.new(0.5, -2, 1, 0),
+			Parent = actions,
+			Size = UDim2.new(1, 0, 0, 20),
 			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
 			TextColor3 = Color3.fromRGB(200, 200, 200),
 			Text = "Copy ID",
@@ -1755,11 +1711,13 @@ function library:window(properties)
 			is_expanded = bool
 			expanded.Visible = bool
 			if bool then
-				TextButton.Size = UDim2.new(1, 0, 0, 120)
+				TextButton.Size = UDim2.new(1, 0, 0, 106)
 				TextButton.BackgroundTransparency = 0.85
+				row_stroke.Color = themes.preset.accent
 			else
 				TextButton.Size = UDim2.new(1, 0, 0, 24)
 				TextButton.BackgroundTransparency = 1
+				row_stroke.Color = Color3.fromRGB(45, 45, 55)
 			end
 		end
 
@@ -1809,7 +1767,8 @@ function library:window(properties)
 		BackgroundColor3 = Color3.fromRGB(22, 22, 22),
 		BorderSizePixel = 0,
 		ZIndex = 1000,
-		AutomaticSize = Enum.AutomaticSize.XY,
+		Size = UDim2.new(0, 150, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
 	})
 
 	library:create("UIStroke", {
@@ -1827,6 +1786,24 @@ function library:window(properties)
 		BackgroundColor3 = themes.preset.accent,
 	})
 	library:apply_theme(accent_line, "accent", "BackgroundColor3")
+
+	local glow = library:create("ImageLabel", {
+		Parent = old_kblist,
+		Name = "",
+		ImageColor3 = themes.preset.accent,
+		ScaleType = Enum.ScaleType.Slice,
+		ImageTransparency = 0.85,
+		BorderColor3 = Color3.fromRGB(0, 0, 0),
+		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+		Image = "http://www.roblox.com/asset/?id=18245826428",
+		BackgroundTransparency = 1,
+		Position = UDim2.new(0, -20, 0, -20),
+		Size = UDim2.new(1, 40, 0, 42),
+		ZIndex = 2,
+		BorderSizePixel = 0,
+		SliceCenter = Rect.new(Vector2.new(21, 21), Vector2.new(79, 79)),
+	})
+	library:apply_theme(glow, "accent", "ImageColor3")
 
 	local name = library:create("TextLabel", {
 		Parent = old_kblist,
@@ -1856,7 +1833,8 @@ function library:window(properties)
 		Name = "",
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		AutomaticSize = Enum.AutomaticSize.XY,
+		Size = UDim2.new(1, 0, 0, 0),
+		AutomaticSize = Enum.AutomaticSize.Y,
 	})
 
 	library:create("UIListLayout", {
@@ -1905,7 +1883,7 @@ function library:new_keybind(properties)
 		TextStrokeTransparency = 0.5,
 		AnchorPoint = Vector2.new(0.5, 0),
 		TextSize = 12,
-		Size = UDim2.new(0, 0, 0, 11),
+		Size = UDim2.new(1, 0, 0, 11),
 		TextColor3 = Color3.fromRGB(170, 170, 170),
 		BorderColor3 = Color3.fromRGB(0, 0, 0),
 		Text = "",
@@ -1914,7 +1892,7 @@ function library:new_keybind(properties)
 		BorderSizePixel = 0,
 		Visible = true,
 		TextYAlignment = Enum.TextYAlignment.Top,
-		AutomaticSize = Enum.AutomaticSize.X,
+		TextXAlignment = Enum.TextXAlignment.Center,
 		BackgroundColor3 = Color3.fromRGB(255, 255, 255),
 	})
 
