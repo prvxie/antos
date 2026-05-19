@@ -3105,6 +3105,7 @@ function library:toggle(properties)
 	})
 
 	function cfg.set(bool)
+		cfg.enabled = bool
 		icon_2.Visible = bool
 		glow.Visible = bool
 
@@ -4806,8 +4807,8 @@ function library:keybind(properties)
 			if input.UserInputType == Enum.UserInputType.Keyboard then
 				if input.KeyCode == cfg.key then
 					if cfg.mode == "toggle" then
-						toggled = not toggled
-						cfg.set(toggled)
+						cfg.active = not cfg.active
+						cfg.set(cfg.active)
 					elseif cfg.mode == "hold" then
 						cfg.set(true)
 					end
@@ -4815,8 +4816,8 @@ function library:keybind(properties)
 			else
 				if input.UserInputType == cfg.key then
 					if cfg.mode == "toggle" then
-						toggled = not toggled
-						cfg.set(toggled)
+						cfg.active = not cfg.active
+						cfg.set(cfg.active)
 					elseif cfg.mode == "hold" then
 						cfg.set(true)
 					end
