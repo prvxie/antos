@@ -537,7 +537,7 @@ function library:window(properties)
 		Name = "",
 		FontFace = library.font,
 		TextColor3 = Color3.fromRGB(255, 255, 255),
-		Text = "ivera.priv ~ Fps: 0 ~ Ping: 0 ~ [game]",
+		Text = "invera.priv ~ Fps: 0 ~ Ping: 0 ~ [game]",
 		TextStrokeTransparency = 0,
 		TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		BackgroundTransparency = 1,
@@ -574,7 +574,7 @@ function library:window(properties)
 			end)
 
 			if __holder.Visible then
-				name.Text = string.format("ivera.priv ~ Fps: %d ~ Ping: %d ~ [%s]", fps, ping, game_name)
+				name.Text = string.format("invera.priv ~ Fps: %d ~ Ping: %d ~ [%s]", fps, ping, game_name)
 			end
 		end
 	end)
@@ -5192,7 +5192,7 @@ function library:open_tool_explorer()
 	library:apply_theme(title_accent, "accent", "BackgroundColor3")
 
 	library:create("TextLabel", {
-		Text = "ivera.priv  /  Tool Explorer",
+		Text = "invera.priv  /  Tool Explorer",
 		Size = UDim2.new(1, -82, 1, 0),
 		Position = UDim2.new(0, 8, 0, 0),
 		BackgroundTransparency = 1,
@@ -5389,7 +5389,7 @@ function library:open_tool_explorer()
 		Parent = BotBar,
 	})
 	library:create("TextLabel", {
-		Text = "ivera.priv  |  Tool Explorer  |  click a part to edit",
+		Text = "invera.priv  |  Tool Explorer  |  click a part to edit",
 		Size = UDim2.new(1, -10, 1, 0),
 		Position = UDim2.new(0, 8, 0, 0),
 		BackgroundTransparency = 1,
