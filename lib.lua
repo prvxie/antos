@@ -247,26 +247,16 @@ function library:make_draggable(frame, drag_handler)
 	local dragging = false
 	local dragInput
 	local dragStart
-	local startPos
-
-	local drag_speed = 0.08 -- premium drag delay!
-
-	local function update(input)
-		local delta = input.Position - dragStart
-		local targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
-		
-		local tweenService = game:GetService("TweenService")
-		local tweenInfo = TweenInfo.new(drag_speed, Enum.EasingStyle.OutQuad)
-		local tween = tweenService:Create(gui, tweenInfo, {Position = targetPos})
-		tween:Play()
-	end
+	local dragOrigin
+	local dragTarget = gui.Position
 
 	local handler = drag_handler or gui
 	library:connection(handler.InputBegan, function(input)
 		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
 			dragging = true
 			dragStart = input.Position
-			startPos = gui.Position
+			dragOrigin = gui.Position
+			dragTarget = gui.Position
 
 			local connection
 			connection = input.Changed:Connect(function()
@@ -285,8 +275,15 @@ function library:make_draggable(frame, drag_handler)
 	end)
 
 	library:connection(uis.InputChanged, function(input)
-		if input == dragInput and dragging then
-			update(input)
+		if dragging and input == dragInput then
+			local delta = input.Position - dragStart
+			dragTarget = UDim2.new(dragOrigin.X.Scale, dragOrigin.X.Offset + delta.X, dragOrigin.Y.Scale, dragOrigin.Y.Offset + delta.Y)
+		end
+	end)
+
+	library:connection(game:GetService("RunService").Heartbeat, function(dt)
+		if dragging or (gui.Position.X.Offset ~= dragTarget.X.Offset or gui.Position.Y.Offset ~= dragTarget.Y.Offset) then
+			gui.Position = gui.Position:Lerp(dragTarget, math.clamp(dt * 15, 0, 1))
 		end
 	end)
 end
