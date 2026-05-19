@@ -1571,7 +1571,7 @@ function library:window(properties)
 
 		local row_stroke = library:create("UIStroke", {
 			Parent = TextButton,
-			Color = Color3.fromRGB(45, 45, 55),
+			Color = Color3.fromRGB(45, 45, 45),
 			Thickness = 1,
 			ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
 		})
@@ -1620,14 +1620,14 @@ function library:window(properties)
 			Size = UDim2.new(0, 2, 0, 24),
 			Position = UDim2.new(0, 0, 0, 0),
 			BorderSizePixel = 0,
-			BackgroundColor3 = Color3.fromRGB(45, 45, 55),
+			BackgroundColor3 = Color3.fromRGB(45, 45, 45),
 		})
 
 		local expanded = library:create("Frame", {
 			Parent = TextButton,
 			Name = "Expanded",
 			Position = UDim2.new(0, 0, 0, 24),
-			Size = UDim2.new(1, 0, 0, 100),
+			Size = UDim2.new(1, 0, 0, 108),
 			BackgroundTransparency = 1,
 			Visible = false,
 			ClipsDescendants = true,
@@ -1637,7 +1637,7 @@ function library:window(properties)
 			Parent = expanded,
 			Position = UDim2.new(0, 4, 0, 0),
 			Size = UDim2.new(1, -8, 0, 1),
-			BackgroundColor3 = Color3.fromRGB(45, 45, 55),
+			BackgroundColor3 = Color3.fromRGB(45, 45, 45),
 			BorderSizePixel = 0,
 		})
 
@@ -1666,36 +1666,39 @@ function library:window(properties)
 			Text = "N",
 			Size = UDim2.new(0, 16, 0, 16),
 			Position = UDim2.new(0, 8, 0, 60),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-			TextColor3 = Color3.fromRGB(200, 200, 200),
+			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			TextColor3 = Color3.fromRGB(170, 170, 170),
 			FontFace = library.font,
-			TextSize = 10,
+			TextSize = 12,
+			TextStrokeTransparency = 0.5,
 		})
-		library:create("UIStroke", { Parent = p_neutral, Color = Color3.fromRGB(57, 57, 57) })
+		library:create("UIStroke", { Parent = p_neutral, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
 
 		local p_friendly = library:create("TextButton", {
 			Parent = expanded,
 			Text = "F",
 			Size = UDim2.new(0, 16, 0, 16),
 			Position = UDim2.new(0, 28, 0, 60),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-			TextColor3 = Color3.fromRGB(100, 100, 255),
+			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			TextColor3 = Color3.fromRGB(170, 170, 170),
 			FontFace = library.font,
-			TextSize = 10,
+			TextSize = 12,
+			TextStrokeTransparency = 0.5,
 		})
-		library:create("UIStroke", { Parent = p_friendly, Color = Color3.fromRGB(57, 57, 57) })
+		library:create("UIStroke", { Parent = p_friendly, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
 
 		local p_enemy = library:create("TextButton", {
 			Parent = expanded,
 			Text = "E",
 			Size = UDim2.new(0, 16, 0, 16),
 			Position = UDim2.new(0, 48, 0, 60),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 40),
-			TextColor3 = Color3.fromRGB(255, 100, 100),
+			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			TextColor3 = Color3.fromRGB(170, 170, 170),
 			FontFace = library.font,
-			TextSize = 10,
+			TextSize = 12,
+			TextStrokeTransparency = 0.5,
 		})
-		library:create("UIStroke", { Parent = p_enemy, Color = Color3.fromRGB(57, 57, 57) })
+		library:create("UIStroke", { Parent = p_enemy, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
 
 		p_neutral.MouseButton1Click:Connect(function()
 			priority_label.Text = "Neutral"
@@ -1704,18 +1707,18 @@ function library:window(properties)
 
 		p_friendly.MouseButton1Click:Connect(function()
 			priority_label.Text = "Friendly"
-			priority_label.TextColor3 = Color3.fromRGB(100, 100, 255)
+			priority_label.TextColor3 = themes.preset.accent
 		end)
 
 		p_enemy.MouseButton1Click:Connect(function()
 			priority_label.Text = "Enemy"
-			priority_label.TextColor3 = Color3.fromRGB(255, 100, 100)
+			priority_label.TextColor3 = Color3.fromRGB(200, 80, 80)
 		end)
 
 		local actions = library:create("Frame", {
 			Parent = expanded,
 			Position = UDim2.new(0, 68, 0, 8),
-			Size = UDim2.new(1, -76, 0, 80),
+			Size = UDim2.new(1, -76, 0, 96),
 			BackgroundTransparency = 1,
 		})
 
@@ -1728,15 +1731,17 @@ function library:window(properties)
 		local btn_tp = library:create("TextButton", {
 			Parent = actions,
 			Size = UDim2.new(1, 0, 0, 16),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 48),
-			TextColor3 = Color3.fromRGB(220, 220, 220),
+			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Teleport",
 			FontFace = library.font,
-			TextSize = 11,
+			TextSize = 12,
+			TextStrokeTransparency = 0.5,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local tp_stroke = library:create("UIStroke", { Parent = btn_tp, Color = Color3.fromRGB(57, 57, 67) })
+		local tp_stroke = library:create("UIStroke", { Parent = btn_tp, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
 		library:connection(btn_tp.MouseEnter, function() tp_stroke.Color = themes.preset.accent end)
-		library:connection(btn_tp.MouseLeave, function() tp_stroke.Color = Color3.fromRGB(57, 57, 67) end)
+		library:connection(btn_tp.MouseLeave, function() tp_stroke.Color = Color3.fromRGB(56, 56, 56) end)
 
 		btn_tp.MouseButton1Click:Connect(function()
 			local char = player.Character
@@ -1764,15 +1769,17 @@ function library:window(properties)
 		local btn_spec = library:create("TextButton", {
 			Parent = spec_row,
 			Size = UDim2.new(0.5, -2, 1, 0),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 48),
-			TextColor3 = Color3.fromRGB(220, 220, 220),
+			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Spectate",
 			FontFace = library.font,
-			TextSize = 11,
+			TextSize = 12,
+			TextStrokeTransparency = 0.5,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local spec_stroke = library:create("UIStroke", { Parent = btn_spec, Color = Color3.fromRGB(57, 57, 67) })
+		local spec_stroke = library:create("UIStroke", { Parent = btn_spec, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
 		library:connection(btn_spec.MouseEnter, function() spec_stroke.Color = themes.preset.accent end)
-		library:connection(btn_spec.MouseLeave, function() spec_stroke.Color = Color3.fromRGB(57, 57, 67) end)
+		library:connection(btn_spec.MouseLeave, function() spec_stroke.Color = Color3.fromRGB(56, 56, 56) end)
 
 		btn_spec.MouseButton1Click:Connect(function()
 			local char = player.Character
@@ -1785,15 +1792,17 @@ function library:window(properties)
 		local btn_unspec = library:create("TextButton", {
 			Parent = spec_row,
 			Size = UDim2.new(0.5, -2, 1, 0),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 48),
-			TextColor3 = Color3.fromRGB(220, 220, 220),
+			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Unspec",
 			FontFace = library.font,
-			TextSize = 11,
+			TextSize = 12,
+			TextStrokeTransparency = 0.5,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local unspec_stroke = library:create("UIStroke", { Parent = btn_unspec, Color = Color3.fromRGB(57, 57, 67) })
+		local unspec_stroke = library:create("UIStroke", { Parent = btn_unspec, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
 		library:connection(btn_unspec.MouseEnter, function() unspec_stroke.Color = themes.preset.accent end)
-		library:connection(btn_unspec.MouseLeave, function() unspec_stroke.Color = Color3.fromRGB(57, 57, 67) end)
+		library:connection(btn_unspec.MouseLeave, function() unspec_stroke.Color = Color3.fromRGB(56, 56, 56) end)
 
 		btn_unspec.MouseButton1Click:Connect(function()
 			camera.CameraSubject = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
@@ -1814,15 +1823,17 @@ function library:window(properties)
 		local btn_cpname = library:create("TextButton", {
 			Parent = copy_row,
 			Size = UDim2.new(0.5, -2, 1, 0),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 48),
-			TextColor3 = Color3.fromRGB(220, 220, 220),
+			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Copy Name",
 			FontFace = library.font,
-			TextSize = 11,
+			TextSize = 12,
+			TextStrokeTransparency = 0.5,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local cpname_stroke = library:create("UIStroke", { Parent = btn_cpname, Color = Color3.fromRGB(57, 57, 67) })
+		local cpname_stroke = library:create("UIStroke", { Parent = btn_cpname, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
 		library:connection(btn_cpname.MouseEnter, function() cpname_stroke.Color = themes.preset.accent end)
-		library:connection(btn_cpname.MouseLeave, function() cpname_stroke.Color = Color3.fromRGB(57, 57, 67) end)
+		library:connection(btn_cpname.MouseLeave, function() cpname_stroke.Color = Color3.fromRGB(56, 56, 56) end)
 
 		btn_cpname.MouseButton1Click:Connect(function()
 			pcall(function()
@@ -1834,15 +1845,17 @@ function library:window(properties)
 		local btn_cpid = library:create("TextButton", {
 			Parent = copy_row,
 			Size = UDim2.new(0.5, -2, 1, 0),
-			BackgroundColor3 = Color3.fromRGB(40, 40, 48),
-			TextColor3 = Color3.fromRGB(220, 220, 220),
+			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Copy ID",
 			FontFace = library.font,
-			TextSize = 11,
+			TextSize = 12,
+			TextStrokeTransparency = 0.5,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local cpid_stroke = library:create("UIStroke", { Parent = btn_cpid, Color = Color3.fromRGB(57, 57, 67) })
+		local cpid_stroke = library:create("UIStroke", { Parent = btn_cpid, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
 		library:connection(btn_cpid.MouseEnter, function() cpid_stroke.Color = themes.preset.accent end)
-		library:connection(btn_cpid.MouseLeave, function() cpid_stroke.Color = Color3.fromRGB(57, 57, 67) end)
+		library:connection(btn_cpid.MouseLeave, function() cpid_stroke.Color = Color3.fromRGB(56, 56, 56) end)
 
 		btn_cpid.MouseButton1Click:Connect(function()
 			pcall(function()
@@ -1865,8 +1878,8 @@ function library:window(properties)
 				TextButton.Size = UDim2.new(1, 0, 0, 24)
 				TextButton.BackgroundTransparency = 0.5
 				left_accent.Size = UDim2.new(0, 2, 0, 24)
-				left_accent.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-				row_stroke.Color = Color3.fromRGB(45, 45, 55)
+				left_accent.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+				row_stroke.Color = Color3.fromRGB(45, 45, 45)
 			end
 		end
 
@@ -1877,8 +1890,8 @@ function library:window(properties)
 
 		library:connection(TextButton.MouseLeave, function()
 			if not is_expanded then
-				left_accent.BackgroundColor3 = Color3.fromRGB(45, 45, 55)
-				row_stroke.Color = Color3.fromRGB(45, 45, 55)
+				left_accent.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
+				row_stroke.Color = Color3.fromRGB(45, 45, 45)
 			end
 		end)
 
