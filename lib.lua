@@ -242,6 +242,55 @@ function library:connection(signal, callback)
 	return connection
 end
 
+function library:make_draggable(frame, drag_handler)
+	local gui = frame
+	local dragging = false
+	local dragInput
+	local dragStart
+	local startPos
+
+	local drag_speed = 0.08 -- premium drag delay!
+
+	local function update(input)
+		local delta = input.Position - dragStart
+		local targetPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+		
+		local tweenService = game:GetService("TweenService")
+		local tweenInfo = TweenInfo.new(drag_speed, Enum.EasingStyle.OutQuad)
+		local tween = tweenService:Create(gui, tweenInfo, {Position = targetPos})
+		tween:Play()
+	end
+
+	local handler = drag_handler or gui
+	library:connection(handler.InputBegan, function(input)
+		if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+			dragging = true
+			dragStart = input.Position
+			startPos = gui.Position
+
+			local connection
+			connection = input.Changed:Connect(function()
+				if input.UserInputState == Enum.UserInputState.End then
+					dragging = false
+					connection:Disconnect()
+				end
+			end)
+		end
+	end)
+
+	library:connection(handler.InputChanged, function(input)
+		if input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch then
+			dragInput = input
+		end
+	end)
+
+	library:connection(uis.InputChanged, function(input)
+		if input == dragInput and dragging then
+			update(input)
+		end
+	end)
+end
+
 function library:make_resizable(frame)
 	local Frame = Instance.new("TextButton")
 	Frame.Position = dim2(1, -10, 1, -10)
@@ -436,13 +485,13 @@ function library:window(properties)
 		Parent = library.gui,
 		Name = "Watermark",
 		Active = true,
-		Draggable = true,
 		Position = UDim2.new(0, 20, 0, 20),
 		BackgroundColor3 = Color3.fromRGB(22, 22, 22),
 		BorderSizePixel = 0,
 		ZIndex = 1000,
 		AutomaticSize = Enum.AutomaticSize.XY,
 	})
+	library:make_draggable(__holder)
 
 	library:create("UIStroke", {
 		Parent = __holder,
@@ -537,7 +586,6 @@ function library:window(properties)
 		Parent = library.gui,
 		Name = "",
 		Active = true,
-		Draggable = true,
 		Position = UDim2.new(0.5, -cfg.size.X.Offset / 2, 0.5, -cfg.size.Y.Offset / 2),
 		BorderColor3 = Color3.fromRGB(8, 8, 8),
 		ZIndex = 2,
@@ -546,6 +594,7 @@ function library:window(properties)
 	})
 	table.insert(library.main_frame, inline1)
 	local WINDOW_PATH = inline1
+	library:make_draggable(inline1)
 	library:make_resizable(inline1)
 
 	local inline2 = library:create("Frame", {
@@ -700,7 +749,6 @@ function library:window(properties)
 		Name = "",
 		Visible = false,
 		Active = true,
-		Draggable = true,
 		Position = UDim2.new(
 			0,
 			inline1.AbsolutePosition.X + inline1.AbsoluteSize.X + 8,
@@ -711,6 +759,7 @@ function library:window(properties)
 		Size = UDim2.new(0, 328, 0, 376),
 		BackgroundColor3 = Color3.fromRGB(56, 56, 56),
 	})
+	library:make_draggable(esp_preview)
 	library:make_resizable(esp_preview)
 
 	local name = library:create("TextLabel", {
@@ -1423,7 +1472,6 @@ function library:window(properties)
 		Parent = library.gui,
 		Name = "PlayerList",
 		Active = true,
-		Draggable = true,
 		AnchorPoint = Vector2.new(0, 0),
 		Position = UDim2.new(0, inline1.AbsolutePosition.X - 258 - 8, 0, inline1.AbsolutePosition.Y + 1),
 		BorderColor3 = Color3.fromRGB(8, 8, 8),
@@ -1431,6 +1479,7 @@ function library:window(properties)
 		BackgroundColor3 = Color3.fromRGB(22, 22, 22),
 		BorderSizePixel = 0,
 	})
+	library:make_draggable(playerlist)
 	library:make_resizable(playerlist)
 
 	table.insert(library.main_frame, playerlist)
@@ -1480,18 +1529,11 @@ function library:window(properties)
 		TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		BorderSizePixel = 0,
 		BackgroundTransparency = 1,
-		Position = UDim2.new(0, 0, 0, 4),
-		Size = UDim2.new(1, 0, 0, 20),
+		Position = UDim2.new(0, 10, 0, 6),
+		Size = UDim2.new(1, -20, 0, 16),
 		ZIndex = 2,
 		TextSize = 12,
-	})
-
-	library:create("UIPadding", {
-		Parent = playerlist,
-		PaddingTop = UDim.new(0, 24),
-		PaddingBottom = UDim.new(0, 8),
-		PaddingLeft = UDim.new(0, 8),
-		PaddingRight = UDim.new(0, 8),
+		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 
 	local __ScrollingFrame = library:create("ScrollingFrame", {
@@ -1500,7 +1542,8 @@ function library:window(properties)
 		Active = true,
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		ScrollBarThickness = 2,
-		Size = UDim2.new(1, 0, 1, 0),
+		Position = UDim2.new(0, 8, 0, 28),
+		Size = UDim2.new(1, -16, 1, -36),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		CanvasSize = UDim2.new(0, 0, 0, 0),
@@ -1883,7 +1926,6 @@ function library:window(properties)
 		Parent = library.gui,
 		Name = "KeybindList",
 		Active = true,
-		Draggable = true,
 		Position = UDim2.new(0, 20, 0.5, 0),
 		BackgroundColor3 = Color3.fromRGB(22, 22, 22),
 		BorderSizePixel = 0,
@@ -1891,6 +1933,7 @@ function library:window(properties)
 		Size = UDim2.new(0, 150, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
 	})
+	library:make_draggable(old_kblist)
 
 	library:create("UIStroke", {
 		Parent = old_kblist,
@@ -1988,7 +2031,11 @@ function library:window(properties)
 	function cfg.set_menu_visibility(bool, pl)
 		WINDOW_PATH.Visible = bool
 
-		playerlist.Visible = flags["player_list"] and bool or false
+		local show_pl = flags["player_list"]
+		if show_pl == nil then
+			show_pl = true
+		end
+		playerlist.Visible = show_pl and bool or false
 	end
 
 	return setmetatable(cfg, library)
@@ -4700,7 +4747,7 @@ function library:keybind(properties)
 
 			cfg.mode = input.mode or "toggle"
 
-			if input.active then
+			if input.active ~= nil then
 				cfg.active = input.active
 			end
 
