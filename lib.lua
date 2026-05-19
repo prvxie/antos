@@ -69,14 +69,14 @@ local _teGui = nil
 
 local themes = {
 	preset = {
-		["outline"] = rgb(32, 32, 38),
-		["inline"] = rgb(60, 55, 75),
-		["accent"] = rgb(100, 100, 255),
-		["contrast"] = rgb(35, 35, 47),
+		["outline"] = rgb(30, 30, 30),
+		["inline"] = rgb(45, 45, 45),
+		["accent"] = rgb(255, 255, 255),
+		["contrast"] = rgb(15, 15, 15),
 		["text"] = rgb(170, 170, 170),
 		["unselected_text"] = rgb(90, 90, 90),
 		["text_outline"] = rgb(0, 0, 0),
-		["glow"] = rgb(100, 100, 255),
+		["glow"] = rgb(255, 255, 255),
 	},
 
 	utility = {
@@ -4416,11 +4416,20 @@ function library:keybind(properties)
 
 	flags[cfg.flag] = {}
 
-	local key = library:new_keybind({
-		text = cfg.display,
-		key = cfg.key,
-		mode = cfg.mode,
-	})
+	local key
+	if properties.no_list then
+		key = {
+			set_visible = function() end,
+			change_text = function() end,
+			update = function() end,
+		}
+	else
+		key = library:new_keybind({
+			text = cfg.display,
+			key = cfg.key,
+			mode = cfg.mode,
+		})
+	end
 
 	local right_components
 	if cfg.name then
