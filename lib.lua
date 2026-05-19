@@ -65,6 +65,7 @@ getgenv().library = {
 
 local flags = library.flags
 local config_flags = library.config_flags
+local _teGui = nil
 
 local themes = {
 	preset = {
@@ -200,6 +201,11 @@ end
 
 function library:unload()
 	library.gui:Destroy()
+
+	if _teGui then
+		pcall(function() _teGui:Destroy() end)
+		_teGui = nil
+	end
 
 	for _, connection in library.connections do
 		connection:Disconnect()
@@ -1913,7 +1919,7 @@ function library:window(properties)
 		Image = "http://www.roblox.com/asset/?id=18245826428",
 		BackgroundTransparency = 1,
 		Position = UDim2.new(0, -20, 0, -20),
-		Size = UDim2.new(1, 40, 0, 42),
+		Size = UDim2.new(1, 40, 1, 40),
 		ZIndex = 2,
 		BorderSizePixel = 0,
 		SliceCenter = Rect.new(Vector2.new(21, 21), Vector2.new(79, 79)),
@@ -1931,16 +1937,9 @@ function library:window(properties)
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		TextSize = 12,
-		Size = UDim2.new(1, 0, 0, 20),
-		Position = UDim2.new(0, 0, 0, 4),
-	})
-
-	library:create("UIPadding", {
-		Parent = old_kblist,
-		PaddingTop = UDim.new(0, 24),
-		PaddingBottom = UDim.new(0, 6),
-		PaddingLeft = UDim.new(0, 10),
-		PaddingRight = UDim.new(0, 10),
+		Size = UDim2.new(1, -20, 0, 16),
+		Position = UDim2.new(0, 10, 0, 4),
+		TextXAlignment = Enum.TextXAlignment.Left,
 	})
 
 	local key_container = library:create("Frame", {
@@ -1948,8 +1947,17 @@ function library:window(properties)
 		Name = "",
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
+		Position = UDim2.new(0, 0, 0, 22),
 		Size = UDim2.new(1, 0, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
+	})
+
+	library:create("UIPadding", {
+		Parent = key_container,
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 6),
+		PaddingLeft = UDim.new(0, 10),
+		PaddingRight = UDim.new(0, 10),
 	})
 
 	library:create("UIListLayout", {
@@ -1961,9 +1969,12 @@ function library:window(properties)
 	})
 
 	library.keybind_path = key_container
+	library._keybindListFrame = old_kblist
+	library.keybind_list_enabled = true
 
 	function cfg.toggle_list(bool)
-		old_kblist.Visible = bool
+		library.keybind_list_enabled = bool
+		library:update_keybind_list_visibility()
 	end
 
 	function cfg.toggle_playerlist(bool)
@@ -1981,6 +1992,22 @@ function library:window(properties)
 	end
 
 	return setmetatable(cfg, library)
+end
+
+function library:update_keybind_list_visibility()
+	if not library._keybindListFrame then return end
+	if not library.keybind_list_enabled then
+		library._keybindListFrame.Visible = false
+		return
+	end
+	local any_active = false
+	for _, child in next, library.keybind_path:GetChildren() do
+		if child:IsA("TextLabel") and child.Visible then
+			any_active = true
+			break
+		end
+	end
+	library._keybindListFrame.Visible = any_active
 end
 
 function library:new_keybind(properties)
@@ -2019,6 +2046,7 @@ function library:new_keybind(properties)
 
 	function cfg.set_visible(bool)
 		keybind_text.Visible = bool
+		library:update_keybind_list_visibility()
 	end
 
 	function cfg.change_text(text)
@@ -4373,7 +4401,7 @@ end
 function library:keybind(properties)
 	local cfg = {
 		flag = properties.flag or tostring(2 ^ math.random(1, 30) * 3),
-		keybind_name = properties.keybind_name or nil,
+		keybind_name = properties.keybind_name or properties.displayName or properties.display or properties.name or "unknown",
 		callback = properties.callback or function() end,
 		open = false,
 		binding = nil,
@@ -4919,6 +4947,1263 @@ function library:textbox(properties)
 	library.config_flags[cfg.flag] = cfg.set
 
 	return setmetatable(cfg, library)
+local _teSliding = false
+local _teSlTrack, _teSlFill, _teSlLbl, _teSlName, _teSlMin, _teSlMax, _teSlCb
+local _teSVDrag = false
+local _teSVBox2, _teSVMkr, _teSVCb
+local _teHueDrag = false
+local _teHueSl2, _teHueMk2, _teHueSVRef, _teHueCb
+local _selectedRow = nil
+
+function library:open_tool_explorer()
+	if _teGui then
+		_teGui.Enabled = true
+		return
+	end
+
+	_teGui = Instance.new("ScreenGui")
+	_teGui.Name = "ToolExplorerGui"
+	_teGui.ResetOnSpawn = false
+	_teGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	_teGui.DisplayOrder = 998
+
+	if gethui then
+		_teGui.Parent = gethui()
+	elseif syn and syn.protect_gui then
+		syn.protect_gui(_teGui)
+		_teGui.Parent = game:GetService("CoreGui")
+	else
+		_teGui.Parent = game:GetService("CoreGui")
+	end
+
+	-- central drag / input connections
+	library:connection(uis.InputChanged, function(i)
+		if i.UserInputType ~= Enum.UserInputType.MouseMovement then return end
+		if _teSliding and _teSlTrack then
+			local pct = math.clamp((i.Position.X - _teSlTrack.AbsolutePosition.X) / _teSlTrack.AbsoluteSize.X, 0, 1)
+			if _teSlFill then _teSlFill.Size = UDim2.new(pct, 0, 1, 0) end
+			local val = _teSlMin + (_teSlMax - _teSlMin) * pct
+			if _teSlLbl then _teSlLbl.Text = (_teSlName or "") .. ":  " .. string.format("%.3g", val) end
+			if _teSlCb then pcall(_teSlCb, val) end
+		end
+		if _teSVDrag and _teSVBox2 then
+			local s2 = math.clamp((i.Position.X - _teSVBox2.AbsolutePosition.X) / _teSVBox2.AbsoluteSize.X, 0, 1)
+			local v2 = 1 - math.clamp((i.Position.Y - _teSVBox2.AbsolutePosition.Y) / _teSVBox2.AbsoluteSize.Y, 0, 1)
+			if _teSVMkr then _teSVMkr.Position = UDim2.new(s2, -2, 1 - v2, -2) end
+			if _teSVCb then pcall(_teSVCb, s2, v2) end
+		end
+		if _teHueDrag and _teHueSl2 then
+			local h2 = math.clamp((i.Position.Y - _teHueSl2.AbsolutePosition.Y) / _teHueSl2.AbsoluteSize.Y, 0, 1)
+			if _teHueMk2 then _teHueMk2.Position = UDim2.new(0, -2, h2, 0) end
+			if _teHueSVRef then _teHueSVRef.BackgroundColor3 = Color3.fromHSV(h2, 1, 1) end
+			if _teHueCb then pcall(_teHueCb, h2) end
+		end
+	end)
+
+	library:connection(uis.InputEnded, function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			_teSliding = false
+			_teSVDrag = false
+			_teHueDrag = false
+		end
+	end)
+
+	local EW, EH = 565, 410
+	local Main = library:create("Frame", {
+		Name = "ToolExplorer",
+		Size = UDim2.new(0, EW, 0, EH),
+		Position = UDim2.new(0.5, -EW/2, 0.5, -EH/2),
+		BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+		BorderSizePixel = 0,
+		ZIndex = 100,
+		Parent = _teGui,
+	})
+
+	library:create("UIStroke", {
+		Parent = Main,
+		Color = Color3.fromRGB(57, 57, 57),
+		Thickness = 1,
+		LineJoinMode = Enum.LineJoinMode.Miter,
+	})
+
+	local left_bar = library:create("Frame", {
+		Size = UDim2.new(0, 2, 1, 0),
+		BackgroundColor3 = themes.preset.accent,
+		BorderSizePixel = 0,
+		ZIndex = 105,
+		Parent = Main,
+	})
+	library:apply_theme(left_bar, "accent", "BackgroundColor3")
+
+	local TitleBar = library:create("Frame", {
+		Size = UDim2.new(1, 0, 0, 28),
+		BackgroundColor3 = Color3.fromRGB(13, 13, 13),
+		BorderSizePixel = 0,
+		ZIndex = 103,
+		Parent = Main,
+	})
+
+	library:create("UIStroke", {
+		Parent = TitleBar,
+		Color = Color3.fromRGB(19, 19, 19),
+		Thickness = 1,
+		LineJoinMode = Enum.LineJoinMode.Miter,
+	})
+
+	local title_accent = library:create("Frame", {
+		Size = UDim2.new(1, 0, 0, 1),
+		Position = UDim2.new(0, 0, 1, -1),
+		BackgroundColor3 = themes.preset.accent,
+		BorderSizePixel = 0,
+		ZIndex = 104,
+		Parent = TitleBar,
+	})
+	library:apply_theme(title_accent, "accent", "BackgroundColor3")
+
+	library:create("TextLabel", {
+		Text = "ivera.priv  /  Tool Explorer",
+		Size = UDim2.new(1, -82, 1, 0),
+		Position = UDim2.new(0, 8, 0, 0),
+		BackgroundTransparency = 1,
+		FontFace = library.font,
+		TextSize = 12,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 104,
+		Parent = TitleBar,
+		TextStrokeTransparency = 0,
+		TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+	})
+
+	local RefreshBtn = library:create("TextButton", {
+		Text = "refresh",
+		Size = UDim2.new(0, 46, 0, 16),
+		Position = UDim2.new(1, -72, 0, 6),
+		BackgroundColor3 = Color3.fromRGB(26, 26, 26),
+		BorderSizePixel = 0,
+		FontFace = library.font,
+		TextSize = 12,
+		TextColor3 = themes.preset.unselected_text,
+		AutoButtonColor = false,
+		ZIndex = 104,
+		Parent = TitleBar,
+		TextStrokeTransparency = 0,
+		TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+	})
+
+	library:create("UIStroke", {
+		Parent = RefreshBtn,
+		Color = Color3.fromRGB(19, 19, 19),
+		Thickness = 1,
+		LineJoinMode = Enum.LineJoinMode.Miter,
+	})
+
+	local CloseBtn = library:create("TextButton", {
+		Text = "x",
+		Size = UDim2.new(0, 22, 0, 16),
+		Position = UDim2.new(1, -25, 0, 6),
+		BackgroundColor3 = Color3.fromRGB(25, 25, 25),
+		BorderSizePixel = 0,
+		FontFace = library.font,
+		TextSize = 12,
+		TextColor3 = Color3.fromRGB(255, 255, 255),
+		AutoButtonColor = false,
+		ZIndex = 104,
+		Parent = TitleBar,
+		TextStrokeTransparency = 0,
+		TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+	})
+
+	library:create("UIStroke", {
+		Parent = CloseBtn,
+		Color = Color3.fromRGB(19, 19, 19),
+		Thickness = 1,
+		LineJoinMode = Enum.LineJoinMode.Miter,
+	})
+
+	CloseBtn.MouseButton1Click:Connect(function()
+		_teGui.Enabled = false
+	end)
+
+	-- title bar drag with lerp
+	local _teDrag, _teDragStart, _teDragOrigin = false, nil, nil
+	local _teDragTarget = Main.Position
+	TitleBar.InputBegan:Connect(function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			_teDrag = true
+			_teDragStart = i.Position
+			_teDragOrigin = Main.Position
+			_teDragTarget = Main.Position
+		end
+	end)
+	library:connection(uis.InputChanged, function(i)
+		if _teDrag and i.UserInputType == Enum.UserInputType.MouseMovement then
+			local d = i.Position - _teDragStart
+			_teDragTarget = UDim2.new(_teDragOrigin.X.Scale, _teDragOrigin.X.Offset + d.X, _teDragOrigin.Y.Scale, _teDragOrigin.Y.Offset + d.Y)
+		end
+	end)
+	library:connection(uis.InputEnded, function(i)
+		if i.UserInputType == Enum.UserInputType.MouseButton1 then
+			_teDrag = false
+		end
+	end)
+	library:connection(game:GetService("RunService").Heartbeat, function(dt)
+		if _teDrag then
+			Main.Position = Main.Position:Lerp(_teDragTarget, math.clamp(dt * 15, 0, 1))
+		end
+	end)
+
+	local Body = library:create("Frame", {
+		Size = UDim2.new(1, 0, 1, -46),
+		Position = UDim2.new(0, 0, 0, 28),
+		BackgroundTransparency = 1,
+		ZIndex = 102,
+		Parent = Main,
+	})
+
+	-- Left Panel
+	local LeftPanel = library:create("ScrollingFrame", {
+		Size = UDim2.new(0, 186, 1, -4),
+		Position = UDim2.new(0, 4, 0, 2),
+		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = themes.preset.accent,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ZIndex = 103,
+		Parent = Body,
+	})
+	library:apply_theme(LeftPanel, "accent", "ScrollBarImageColor3")
+
+	library:create("UIStroke", {
+		Parent = LeftPanel,
+		Color = Color3.fromRGB(19, 19, 19),
+		Thickness = 1,
+		LineJoinMode = Enum.LineJoinMode.Miter,
+	})
+
+	library:create("UIListLayout", {
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 1),
+		Parent = LeftPanel,
+	})
+	library:create("UIPadding", {
+		PaddingTop = UDim.new(0, 4),
+		PaddingBottom = UDim.new(0, 4),
+		PaddingLeft = UDim.new(0, 4),
+		PaddingRight = UDim.new(0, 4),
+		Parent = LeftPanel,
+	})
+
+	-- Separator
+	library:create("Frame", {
+		Size = UDim2.new(0, 1, 1, -4),
+		Position = UDim2.new(0, 192, 0, 2),
+		BackgroundColor3 = Color3.fromRGB(19, 19, 19),
+		BorderSizePixel = 0,
+		ZIndex = 103,
+		Parent = Body,
+	})
+
+	-- Right Panel
+	local RightPanel = library:create("ScrollingFrame", {
+		Size = UDim2.new(1, -199, 1, -4),
+		Position = UDim2.new(0, 195, 0, 2),
+		BackgroundColor3 = Color3.fromRGB(15, 15, 15),
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = themes.preset.accent,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(0, 0, 0, 0),
+		ZIndex = 103,
+		Parent = Body,
+	})
+	library:apply_theme(RightPanel, "accent", "ScrollBarImageColor3")
+
+	library:create("UIStroke", {
+		Parent = RightPanel,
+		Color = Color3.fromRGB(19, 19, 19),
+		Thickness = 1,
+		LineJoinMode = Enum.LineJoinMode.Miter,
+	})
+
+	library:create("UIListLayout", {
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Padding = UDim.new(0, 4),
+		Parent = RightPanel,
+	})
+	library:create("UIPadding", {
+		PaddingTop = UDim.new(0, 6),
+		PaddingBottom = UDim.new(0, 10),
+		PaddingLeft = UDim.new(0, 7),
+		PaddingRight = UDim.new(0, 7),
+		Parent = RightPanel,
+	})
+
+	-- Bottom bar
+	local BotBar = library:create("Frame", {
+		Size = UDim2.new(1, 0, 0, 18),
+		Position = UDim2.new(0, 0, 1, -18),
+		BackgroundColor3 = Color3.fromRGB(11, 11, 11),
+		BorderSizePixel = 0,
+		ZIndex = 103,
+		Parent = Main,
+	})
+	library:create("Frame", {
+		Size = UDim2.new(1, 0, 0, 1),
+		BackgroundColor3 = Color3.fromRGB(28, 28, 28),
+		BorderSizePixel = 0,
+		ZIndex = 104,
+		Parent = BotBar,
+	})
+	library:create("TextLabel", {
+		Text = "ivera.priv  |  Tool Explorer  |  click a part to edit",
+		Size = UDim2.new(1, -10, 1, 0),
+		Position = UDim2.new(0, 8, 0, 0),
+		BackgroundTransparency = 1,
+		FontFace = library.font,
+		TextSize = 9,
+		TextColor3 = themes.preset.unselected_text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		ZIndex = 104,
+		Parent = BotBar,
+		TextStrokeTransparency = 0,
+		TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+	})
+
+	-- Helpers
+	local function IsWithin(frame, input)
+		local pos = frame.AbsolutePosition
+		local size = frame.AbsoluteSize
+		local mx, my = input.Position.X, input.Position.Y
+		return mx >= pos.X and mx <= pos.X + size.X and my >= pos.Y and my <= pos.Y + size.Y
+	end
+
+	local function ClearRP()
+		for _, c in pairs(RightPanel:GetChildren()) do
+			if not c:IsA("UIListLayout") and not c:IsA("UIPadding") then c:Destroy() end
+		end
+	end
+
+	local function RPLbl(text, color, h)
+		return library:create("TextLabel", {
+			Text = text,
+			Size = UDim2.new(1, 0, 0, h or 14),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = color or themes.preset.unselected_text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 104,
+			Parent = RightPanel,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		})
+	end
+
+	local function RPDiv()
+		library:create("Frame", {
+			Size = UDim2.new(1, 0, 0, 1),
+			BackgroundColor3 = Color3.fromRGB(19, 19, 19),
+			BorderSizePixel = 0,
+			ZIndex = 104,
+			Parent = RightPanel,
+		})
+	end
+
+	local function RPSlider(name, min, max, cur, cb)
+		local holder = library:create("Frame", {
+			Size = UDim2.new(1, 0, 0, 36),
+			BackgroundTransparency = 1,
+			ZIndex = 104,
+			Parent = RightPanel,
+		})
+		local lbl = library:create("TextLabel", {
+			Text = name .. ":  " .. string.format("%.3g", cur),
+			Size = UDim2.new(1, 0, 0, 14),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = Color3.fromRGB(170, 170, 170),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 105,
+			Parent = holder,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		})
+		local track = library:create("Frame", {
+			Size = UDim2.new(1, 0, 0, 8),
+			Position = UDim2.new(0, 0, 0, 18),
+			BackgroundColor3 = Color3.fromRGB(26, 26, 26),
+			BorderSizePixel = 0,
+			ZIndex = 105,
+			Parent = holder,
+		})
+		library:create("UIStroke", {
+			Parent = track,
+			Color = Color3.fromRGB(19, 19, 19),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+		local fill = library:create("Frame", {
+			Size = UDim2.new(math.clamp((cur - min) / (max - min), 0, 1), 0, 1, 0),
+			BackgroundColor3 = themes.preset.accent,
+			BorderSizePixel = 0,
+			ZIndex = 106,
+			Parent = track,
+		})
+		library:apply_theme(fill, "accent", "BackgroundColor3")
+		local tBtn = library:create("TextButton", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 107,
+			Parent = track,
+		})
+		tBtn.InputBegan:Connect(function(i)
+			if i.UserInputType == Enum.UserInputType.MouseButton1 then
+				_teSliding = true
+				_teSlTrack = track
+				_teSlFill = fill
+				_teSlLbl = lbl
+				_teSlName = name
+				_teSlMin = min
+				_teSlMax = max
+				_teSlCb = cb
+				local pct = math.clamp((i.Position.X - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
+				fill.Size = UDim2.new(pct, 0, 1, 0)
+				local val = min + (max - min) * pct
+				lbl.Text = name .. ":  " .. string.format("%.3g", val)
+				if cb then pcall(cb, val) end
+			end
+		end)
+	end
+
+	local function RPColorPicker(name, defaultColor, cb)
+		local h, s, v = Color3.toHSV(defaultColor)
+		local holder = library:create("Frame", {
+			Size = UDim2.new(1, 0, 0, 18),
+			BackgroundTransparency = 1,
+			ZIndex = 104,
+			Parent = RightPanel,
+		})
+		library:create("TextLabel", {
+			Text = name,
+			Size = UDim2.new(1, -22, 1, 0),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = Color3.fromRGB(170, 170, 170),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 105,
+			Parent = holder,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		})
+		local CPHolder = library:create("Frame", {
+			Size = UDim2.new(0, 18, 0, 10),
+			Position = UDim2.new(1, -18, 0, 4),
+			BackgroundColor3 = defaultColor,
+			BorderSizePixel = 0,
+			ZIndex = 105,
+			Parent = holder,
+		})
+		library:create("UIStroke", {
+			Parent = CPHolder,
+			Color = Color3.fromRGB(19, 19, 19),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+		local CPBtn = library:create("TextButton", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 106,
+			Parent = CPHolder,
+		})
+
+		local Picker = library:create("Frame", {
+			Size = UDim2.new(0, 160, 0, 160),
+			BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+			Visible = false,
+			ZIndex = 6000,
+			Parent = _teGui,
+		})
+		library:create("UIStroke", {
+			Parent = Picker,
+			Color = Color3.fromRGB(57, 57, 57),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+
+		local SVBox = library:create("Frame", {
+			Size = UDim2.new(0, 120, 0, 120),
+			Position = UDim2.new(0, 10, 0, 10),
+			BackgroundColor3 = Color3.fromHSV(h, 1, 1),
+			ZIndex = 6001,
+			Parent = Picker,
+		})
+		library:create("UIStroke", {
+			Parent = SVBox,
+			Color = Color3.fromRGB(19, 19, 19),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+		local SatGrad = library:create("Frame", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			ZIndex = 6002,
+			Parent = SVBox,
+		})
+		library:create("UIGradient", {
+			Color = ColorSequence.new(Color3.new(1, 1, 1)),
+			Transparency = NumberSequence.new(0, 1),
+			Parent = SatGrad,
+		})
+		local ValGrad = library:create("Frame", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundColor3 = Color3.new(0, 0, 0),
+			ZIndex = 6003,
+			Parent = SVBox,
+		})
+		library:create("UIGradient", {
+			Rotation = 90,
+			Color = ColorSequence.new(Color3.new(0, 0, 0)),
+			Transparency = NumberSequence.new(1, 0),
+			Parent = ValGrad,
+		})
+		local Mkr = library:create("Frame", {
+			Size = UDim2.new(0, 4, 0, 4),
+			Position = UDim2.new(s, -2, 1 - v, -2),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			ZIndex = 6004,
+			Parent = SVBox,
+		})
+		library:create("UIStroke", {
+			Color = Color3.new(0, 0, 0),
+			Thickness = 1,
+			Parent = Mkr,
+		})
+		local SVBtn = library:create("TextButton", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 6005,
+			Parent = SVBox,
+		})
+
+		local HueSl = library:create("Frame", {
+			Size = UDim2.new(0, 12, 0, 120),
+			Position = UDim2.new(1, -22, 0, 10),
+			ZIndex = 6001,
+			Parent = Picker,
+		})
+		library:create("UIStroke", {
+			Parent = HueSl,
+			Color = Color3.fromRGB(19, 19, 19),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+		library:create("UIGradient", {
+			Rotation = 90,
+			Color = ColorSequence.new({
+				ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+				ColorSequenceKeypoint.new(0.167, Color3.fromRGB(255, 255, 0)),
+				ColorSequenceKeypoint.new(0.333, Color3.fromRGB(0, 255, 0)),
+				ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 255)),
+				ColorSequenceKeypoint.new(0.667, Color3.fromRGB(0, 0, 255)),
+				ColorSequenceKeypoint.new(0.833, Color3.fromRGB(255, 0, 255)),
+				ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 0, 0)),
+			}),
+			Parent = HueSl,
+		})
+		local HueMk = library:create("Frame", {
+			Size = UDim2.new(1, 4, 0, 2),
+			Position = UDim2.new(0, -2, h, 0),
+			BackgroundColor3 = Color3.new(1, 1, 1),
+			ZIndex = 6002,
+			Parent = HueSl,
+		})
+		local HueBtn = library:create("TextButton", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 6005,
+			Parent = HueSl,
+		})
+
+		local RGBHolder = library:create("Frame", {
+			Size = UDim2.new(0, 50, 0, 14),
+			Position = UDim2.new(0, 10, 0, 135),
+			BackgroundTransparency = 1,
+			ZIndex = 6005,
+			Parent = Picker,
+		})
+		local RGBBox = library:create("Frame", {
+			Size = UDim2.new(0, 10, 0, 10),
+			Position = UDim2.new(0, 0, 0, 2),
+			BackgroundColor3 = Color3.fromRGB(50, 50, 50),
+			BorderSizePixel = 0,
+			ZIndex = 6006,
+			Parent = RGBHolder,
+		})
+		library:create("UIStroke", {
+			Parent = RGBBox,
+			Color = Color3.fromRGB(19, 19, 19),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+		local RGBLabel = library:create("TextLabel", {
+			Text = "RGB",
+			Size = UDim2.new(0, 30, 1, 0),
+			Position = UDim2.new(0, 15, 0, 0),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = themes.preset.unselected_text,
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 6006,
+			Parent = RGBHolder,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		})
+		local RGBBtn = library:create("TextButton", {
+			Size = UDim2.new(0, 50, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 6007,
+			Parent = RGBHolder,
+		})
+		local rgbEnabled = false
+		local rgbConn
+		local function SetRGB(val)
+			rgbEnabled = val
+			RGBBox.BackgroundColor3 = rgbEnabled and themes.preset.accent or Color3.fromRGB(50, 50, 50)
+			RGBLabel.TextColor3 = rgbEnabled and Color3.fromRGB(255, 255, 255) or themes.preset.unselected_text
+			if rgbEnabled then
+				rgbConn = game:GetService("RunService").Heartbeat:Connect(function()
+					h = (tick() % 3) / 3
+					HueMk.Position = UDim2.new(0, -2, h, 0)
+					SVBox.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+					local c = Color3.fromHSV(h, s, v)
+					CPHolder.BackgroundColor3 = c
+					if cb then pcall(cb, c) end
+				end)
+				table.insert(library.connections, rgbConn)
+			else
+				if rgbConn then rgbConn:Disconnect() rgbConn = nil end
+			end
+		end
+		RGBBtn.MouseButton1Click:Connect(function() SetRGB(not rgbEnabled) end)
+
+		local function ClosePicker()
+			Picker.Visible = false
+			_teSVDrag = false
+			_teHueDrag = false
+		end
+
+		CPBtn.MouseButton1Click:Connect(function()
+			if Picker.Visible then ClosePicker() return end
+			local pos = CPHolder.AbsolutePosition
+			Picker.Position = UDim2.new(0, pos.X + 22, 0, pos.Y)
+			RGBBox.BackgroundColor3 = rgbEnabled and themes.preset.accent or Color3.fromRGB(50, 50, 50)
+			RGBLabel.TextColor3 = rgbEnabled and Color3.fromRGB(255, 255, 255) or themes.preset.unselected_text
+			Picker.Visible = true
+		end)
+
+		SVBtn.InputBegan:Connect(function(i)
+			if i.UserInputType == Enum.UserInputType.MouseButton1 then
+				_teSVDrag = true
+				_teSVBox2 = SVBox
+				_teSVMkr = Mkr
+				_teSVCb = function(ns, nv)
+					s = ns
+					v = nv
+					SVBox.BackgroundColor3 = Color3.fromHSV(h, 1, 1)
+					local c = Color3.fromHSV(h, s, v)
+					CPHolder.BackgroundColor3 = c
+					if cb then pcall(cb, c) end
+				end
+			end
+		end)
+
+		HueBtn.InputBegan:Connect(function(i)
+			if i.UserInputType == Enum.UserInputType.MouseButton1 then
+				_teHueDrag = true
+				_teHueSl2 = HueSl
+				_teHueMk2 = HueMk
+				_teHueSVRef = SVBox
+				_teHueCb = function(nh)
+					h = nh
+					local c = Color3.fromHSV(h, s, v)
+					CPHolder.BackgroundColor3 = c
+					if cb then pcall(cb, c) end
+				end
+			end
+		end)
+
+		library:connection(uis.InputBegan, function(inp)
+			if inp.UserInputType == Enum.UserInputType.MouseButton1 and Picker.Visible then
+				if not IsWithin(Picker, inp) and not IsWithin(CPHolder, inp) then ClosePicker() end
+			end
+		end)
+	end
+
+	local function RPDropdown(name, options, default, cb)
+		local holder = library:create("Frame", {
+			Size = UDim2.new(1, 0, 0, 34),
+			BackgroundTransparency = 1,
+			ZIndex = 104,
+			Parent = RightPanel,
+		})
+		library:create("TextLabel", {
+			Text = name,
+			Size = UDim2.new(1, 0, 0, 12),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = Color3.fromRGB(170, 170, 170),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 105,
+			Parent = holder,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		})
+		local selected = default or options[1] or ""
+		local Box = library:create("Frame", {
+			Size = UDim2.new(1, 0, 0, 18),
+			Position = UDim2.new(0, 0, 0, 14),
+			BackgroundColor3 = Color3.fromRGB(26, 26, 26),
+			BorderSizePixel = 0,
+			ZIndex = 105,
+			Parent = holder,
+		})
+		library:create("UIStroke", {
+			Parent = Box,
+			Color = Color3.fromRGB(19, 19, 19),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+		local ValueLabel = library:create("TextLabel", {
+			Text = selected,
+			Size = UDim2.new(1, -20, 1, 0),
+			Position = UDim2.new(0, 6, 0, 0),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = Color3.fromRGB(170, 170, 170),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 106,
+			Parent = Box,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		})
+		library:create("TextLabel", {
+			Text = "v",
+			Size = UDim2.new(0, 18, 1, 0),
+			Position = UDim2.new(1, -18, 0, 0),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = Color3.fromRGB(170, 170, 170),
+			TextXAlignment = Enum.TextXAlignment.Center,
+			ZIndex = 106,
+			Parent = Box,
+		})
+		local Btn = library:create("TextButton", {
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 107,
+			Parent = Box,
+		})
+		local DropContainer = library:create("Frame", {
+			BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+			BorderSizePixel = 0,
+			Visible = false,
+			ZIndex = 7000,
+			Parent = _teGui,
+		})
+		library:create("UIStroke", {
+			Parent = DropContainer,
+			Color = Color3.fromRGB(57, 57, 57),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+		local dropped = false
+		local function UpdateList()
+			DropContainer:ClearAllChildren()
+			local layout = library:create("UIListLayout", {
+				SortOrder = Enum.SortOrder.LayoutOrder,
+				Parent = DropContainer,
+			})
+			local maxH = math.clamp(#options * 18, 18, 200)
+			DropContainer.Size = UDim2.new(0, Box.AbsoluteSize.X, 0, maxH)
+			for _, opt in ipairs(options) do
+				local ob = library:create("TextButton", {
+					Text = opt,
+					Size = UDim2.new(1, 0, 0, 18),
+					BackgroundTransparency = 1,
+					FontFace = library.font,
+					TextSize = 12,
+					TextColor3 = (opt == selected) and themes.preset.accent or Color3.fromRGB(170, 170, 170),
+					TextXAlignment = Enum.TextXAlignment.Left,
+					ZIndex = 7001,
+					Parent = DropContainer,
+					TextStrokeTransparency = 0,
+					TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+				})
+				library:apply_theme(ob, "accent", "TextColor3")
+				library:create("UIPadding", {
+					PaddingLeft = UDim.new(0, 6),
+					Parent = ob,
+				})
+				ob.MouseButton1Click:Connect(function()
+					selected = opt
+					ValueLabel.Text = opt
+					dropped = false
+					DropContainer.Visible = false
+					if cb then pcall(cb, opt) end
+				end)
+			end
+		end
+		Btn.MouseButton1Click:Connect(function()
+			dropped = not dropped
+			if dropped then
+				task.defer(function()
+					UpdateList()
+					DropContainer.Position = UDim2.new(0, Box.AbsolutePosition.X, 0, Box.AbsolutePosition.Y + 20)
+					DropContainer.Visible = true
+				end)
+			else
+				DropContainer.Visible = false
+			end
+		end)
+		library:connection(uis.InputBegan, function(input)
+			if input.UserInputType == Enum.UserInputType.MouseButton1 and dropped then
+				if not IsWithin(DropContainer, input) and not IsWithin(Box, input) then
+					dropped = false
+					DropContainer.Visible = false
+				end
+			end
+		end)
+	end
+
+	local function RPTextBox(name, default, cb)
+		local holder = library:create("Frame", {
+			Size = UDim2.new(1, 0, 0, 34),
+			BackgroundTransparency = 1,
+			ZIndex = 104,
+			Parent = RightPanel,
+		})
+		library:create("TextLabel", {
+			Text = name,
+			Size = UDim2.new(1, 0, 0, 14),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = Color3.fromRGB(170, 170, 170),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ZIndex = 105,
+			Parent = holder,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		})
+		local Box = library:create("Frame", {
+			Size = UDim2.new(1, 0, 0, 16),
+			Position = UDim2.new(0, 0, 0, 16),
+			BackgroundColor3 = Color3.fromRGB(26, 26, 26),
+			BorderSizePixel = 0,
+			ZIndex = 105,
+			Parent = holder,
+		})
+		library:create("UIStroke", {
+			Parent = Box,
+			Color = Color3.fromRGB(19, 19, 19),
+			Thickness = 1,
+			LineJoinMode = Enum.LineJoinMode.Miter,
+		})
+		local Input = library:create("TextBox", {
+			Text = tostring(default or ""),
+			PlaceholderText = "...",
+			Size = UDim2.new(1, -10, 1, 0),
+			Position = UDim2.new(0, 5, 0, 0),
+			BackgroundTransparency = 1,
+			FontFace = library.font,
+			TextSize = 12,
+			TextColor3 = Color3.fromRGB(170, 170, 170),
+			TextXAlignment = Enum.TextXAlignment.Left,
+			ClearTextOnFocus = false,
+			ZIndex = 106,
+			Parent = Box,
+			TextStrokeTransparency = 0,
+			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+		})
+		Input.FocusLost:Connect(function()
+			if cb then pcall(cb, Input.Text) end
+		end)
+	end
+
+	local function BuildProperties(obj)
+		ClearRP()
+		local ok, cname = pcall(function() return obj.ClassName end)
+		if not ok then RPLbl("Could not read object.") return end
+
+		RPLbl("/ " .. obj.Name, themes.preset.accent, 16)
+		RPLbl("[" .. cname .. "]", themes.preset.unselected_text, 12)
+		RPDiv()
+
+		RPTextBox("Name", obj.Name, function(t) pcall(function() obj.Name = t end) end)
+		local pName = "nil"
+		pcall(function() pName = obj.Parent and obj.Parent.Name or "nil" end)
+		RPLbl("Parent: " .. pName, themes.preset.unselected_text)
+		RPDiv()
+
+		if obj:IsA("BasePart") then
+			local matName = tostring(obj.Material):match("%.(.+)$") or "Neon"
+			if matName ~= "ForceField" and matName ~= "Glass" and matName ~= "Neon" then matName = "Neon" end
+			RPDropdown("Material", { "ForceField", "Glass", "Neon" }, matName, function(vv)
+				pcall(function() obj.Material = Enum.Material[vv] end)
+				task.defer(function() BuildProperties(obj) end)
+			end)
+			RPColorPicker("Color", obj.Color, function(c) pcall(function() obj.Color = c end) end)
+			if matName == "Glass" then
+				RPSlider("Transparency", 0, 1, obj.Transparency, function(vv) pcall(function() obj.Transparency = vv end) end)
+				RPSlider("Reflectance", 0, 1, obj.Reflectance, function(vv) pcall(function() obj.Reflectance = vv end) end)
+			elseif matName == "Neon" then
+				RPSlider("Transparency", 0, 1, obj.Transparency, function(vv) pcall(function() obj.Transparency = vv end) end)
+			end
+			RPDropdown("Cast Shadow", { "true", "false" }, obj.CastShadow and "true" or "false", function(vv) pcall(function() obj.CastShadow = vv == "true" end) end)
+			RPDropdown("Can Collide", { "true", "false" }, obj.CanCollide and "true" or "false", function(vv) pcall(function() obj.CanCollide = vv == "true" end) end)
+			RPDropdown("Anchored", { "true", "false" }, obj.Anchored and "true" or "false", function(vv) pcall(function() obj.Anchored = vv == "true" end) end)
+			RPDropdown("Massless", { "true", "false" }, obj.Massless and "true" or "false", function(vv) pcall(function() obj.Massless = vv == "true" end) end)
+		end
+
+		if obj:IsA("MeshPart") then
+			RPDiv()
+			RPLbl("Mesh Settings", themes.preset.accent)
+			RPTextBox("TextureID", obj.TextureID, function(t) pcall(function() obj.TextureID = t end) end)
+			RPTextBox("MeshID", obj.MeshId, function(t) pcall(function() obj.MeshId = t end) end)
+			RPDropdown("DoubleSided", { "true", "false" }, obj.DoubleSided and "true" or "false", function(vv) pcall(function() obj.DoubleSided = vv == "true" end) end)
+		end
+
+		if obj:IsA("SpecialMesh") then
+			RPDiv()
+			RPLbl("SpecialMesh", themes.preset.accent)
+			RPTextBox("TextureId", obj.TextureId, function(t) pcall(function() obj.TextureId = t end) end)
+			RPTextBox("MeshId", obj.MeshId, function(t) pcall(function() obj.MeshId = t end) end)
+			RPDropdown("MeshType", { "FileMesh", "Sphere", "Cylinder", "Brick", "Head", "Torso", "Wedge" }, tostring(obj.MeshType):match("%.(.+)$") or "FileMesh", function(vv) pcall(function() obj.MeshType = Enum.MeshType[vv] end) end)
+			local sc = obj.Scale
+			RPSlider("Scale X", 0, 20, sc.X, function(vv) pcall(function() obj.Scale = Vector3.new(vv, obj.Scale.Y, obj.Scale.Z) end) end)
+			RPSlider("Scale Y", 0, 20, sc.Y, function(vv) pcall(function() obj.Scale = Vector3.new(obj.Scale.X, vv, obj.Scale.Z) end) end)
+			RPSlider("Scale Z", 0, 20, sc.Z, function(vv) pcall(function() obj.Scale = Vector3.new(obj.Scale.X, obj.Scale.Y, vv) end) end)
+			local ofs = obj.Offset
+			RPSlider("Offset X", -20, 20, ofs.X, function(vv) pcall(function() obj.Offset = Vector3.new(vv, obj.Offset.Y, obj.Offset.Z) end) end)
+			RPSlider("Offset Y", -20, 20, ofs.Y, function(vv) pcall(function() obj.Offset = Vector3.new(obj.Offset.X, vv, obj.Offset.Z) end) end)
+			RPSlider("Offset Z", -20, 20, ofs.Z, function(vv) pcall(function() obj.Offset = Vector3.new(obj.Offset.X, obj.Offset.Y, vv) end) end)
+		end
+
+		if obj:IsA("Decal") or obj:IsA("Texture") then
+			RPDiv()
+			RPLbl(obj.ClassName, themes.preset.accent)
+			RPTextBox("Texture", obj.Texture, function(t) pcall(function() obj.Texture = t end) end)
+			RPColorPicker("Color3", obj.Color3, function(c) pcall(function() obj.Color3 = c end) end)
+			RPSlider("Transparency", 0, 1, obj.Transparency, function(vv) pcall(function() obj.Transparency = vv end) end)
+			RPDropdown("Face", { "Top", "Bottom", "Left", "Right", "Front", "Back" }, tostring(obj.Face):match("%.(.+)$") or "Front", function(vv) pcall(function() obj.Face = Enum.NormalId[vv] end) end)
+			if obj:IsA("Texture") then
+				RPSlider("StudsPerTileU", 0.1, 50, obj.StudsPerTileU, function(vv) pcall(function() obj.StudsPerTileU = vv end) end)
+				RPSlider("StudsPerTileV", 0.1, 50, obj.StudsPerTileV, function(vv) pcall(function() obj.StudsPerTileV = vv end) end)
+				RPSlider("OffsetStudsU", -50, 50, obj.OffsetStudsU, function(vv) pcall(function() obj.OffsetStudsU = vv end) end)
+				RPSlider("OffsetStudsV", -50, 50, obj.OffsetStudsV, function(vv) pcall(function() obj.OffsetStudsV = vv end) end)
+			end
+		end
+
+		if obj:IsA("Light") then
+			RPDiv()
+			RPLbl(obj.ClassName, themes.preset.accent)
+			RPColorPicker("Color", obj.Color, function(c) pcall(function() obj.Color = c end) end)
+			RPSlider("Brightness", 0, 50, obj.Brightness, function(vv) pcall(function() obj.Brightness = vv end) end)
+			RPSlider("Range", 0, 100, obj.Range, function(vv) pcall(function() obj.Range = vv end) end)
+			RPDropdown("Shadows", { "true", "false" }, obj.Shadows and "true" or "false", function(vv) pcall(function() obj.Shadows = vv == "true" end) end)
+			RPDropdown("Enabled", { "true", "false" }, obj.Enabled and "true" or "false", function(vv) pcall(function() obj.Enabled = vv == "true" end) end)
+			if obj:IsA("SpotLight") or obj:IsA("SurfaceLight") then
+				RPSlider("Angle", 0, 180, obj.Angle, function(vv) pcall(function() obj.Angle = vv end) end)
+				RPDropdown("Face", { "Top", "Bottom", "Left", "Right", "Front", "Back" }, tostring(obj.Face):match("%.(.+)$") or "Front", function(vv) pcall(function() obj.Face = Enum.NormalId[vv] end) end)
+			end
+		end
+
+		if obj:IsA("ParticleEmitter") then
+			RPDiv()
+			RPLbl("ParticleEmitter", themes.preset.accent)
+			local startC = Color3.new(1, 1, 1)
+			pcall(function() startC = obj.Color.Keypoints[1].Value end)
+			RPColorPicker("Color", startC, function(c) pcall(function() obj.Color = ColorSequence.new(c) end) end)
+			RPSlider("Rate", 0, 1000, obj.Rate, function(vv) pcall(function() obj.Rate = vv end) end)
+			local lifMin = 1
+			pcall(function() lifMin = obj.Lifetime.Min end)
+			local lifMax = 5
+			pcall(function() lifMax = obj.Lifetime.Max end)
+			RPSlider("Lifetime Min", 0.1, 50, lifMin, function(vv) pcall(function() obj.Lifetime = NumberRange.new(vv, math.max(vv, obj.Lifetime.Max)) end) end)
+			RPSlider("Lifetime Max", 0.1, 50, lifMax, function(vv) pcall(function() obj.Lifetime = NumberRange.new(math.min(vv, obj.Lifetime.Min), vv) end) end)
+			local spdMin = 10
+			pcall(function() spdMin = obj.Speed.Min end)
+			RPSlider("Speed", 0, 500, spdMin, function(vv) pcall(function() obj.Speed = NumberRange.new(vv, vv) end) end)
+			RPSlider("Rot Speed", -1000, 1000, obj.RotSpeed.Min, function(vv) pcall(function() obj.RotSpeed = NumberRange.new(vv, vv) end) end)
+			RPSlider("Spread X", 0, 180, obj.SpreadAngle.X, function(vv) pcall(function() obj.SpreadAngle = Vector2.new(vv, obj.SpreadAngle.Y) end) end)
+			RPSlider("Spread Y", 0, 180, obj.SpreadAngle.Y, function(vv) pcall(function() obj.SpreadAngle = Vector2.new(obj.SpreadAngle.X, vv) end) end)
+			RPSlider("Size Start", 0, 20, 1, function(vv)
+				pcall(function()
+					local cur = obj.Size
+					local mid = cur.Keypoints[2] and cur.Keypoints[2].Value or vv
+					local en = cur.Keypoints[#cur.Keypoints] and cur.Keypoints[#cur.Keypoints].Value or 0
+					obj.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, vv), NumberSequenceKeypoint.new(0.5, mid), NumberSequenceKeypoint.new(1, en) })
+				end)
+			end)
+			RPSlider("Size End", 0, 20, 0, function(vv)
+				pcall(function()
+					local cur = obj.Size
+					local st = cur.Keypoints[1] and cur.Keypoints[1].Value or 1
+					local mid = cur.Keypoints[2] and cur.Keypoints[2].Value or st
+					obj.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, st), NumberSequenceKeypoint.new(0.5, mid), NumberSequenceKeypoint.new(1, vv) })
+				end)
+			end)
+			RPSlider("Transparency", 0, 1, 0, function(vv) pcall(function() obj.Transparency = NumberSequence.new(vv) end) end)
+			RPSlider("Rotation", -360, 360, 0, function(vv) pcall(function() obj.Rotation = NumberRange.new(vv, vv) end) end)
+			RPSlider("Gravity", -100, 100, 0, function(vv) pcall(function() obj.Acceleration = Vector3.new(obj.Acceleration.X, vv, obj.Acceleration.Z) end) end)
+			RPSlider("Wind X", -100, 100, 0, function(vv) pcall(function() obj.Acceleration = Vector3.new(vv, obj.Acceleration.Y, obj.Acceleration.Z) end) end)
+			RPSlider("Wind Z", -100, 100, 0, function(vv) pcall(function() obj.Acceleration = Vector3.new(obj.Acceleration.X, obj.Acceleration.Y, vv) end) end)
+			RPTextBox("Texture", obj.Texture, function(t) pcall(function() obj.Texture = t end) end)
+			RPDropdown("Texture Preset", {
+				"rbxassetid://6646051458",
+				"rbxassetid://6101261905",
+				"rbxassetid://15620150915",
+				"rbxassetid://1266170131",
+				"rbxassetid://242102147",
+				"rbxassetid://1295553959",
+			}, obj.Texture, function(vv) pcall(function() obj.Texture = vv end) end)
+			RPDropdown("Emit Direction", { "Top", "Bottom", "Front", "Back", "Left", "Right" }, "Top", function(vv) pcall(function() obj.EmissionDirection = Enum.NormalId[vv] end) end)
+			RPDropdown("Enabled", { "true", "false" }, obj.Enabled and "true" or "false", function(vv) pcall(function() obj.Enabled = vv == "true" end) end)
+			RPDropdown("Lock Velocity", { "true", "false" }, obj.LockedToPart and "true" or "false", function(vv) pcall(function() obj.LockedToPart = vv == "true" end) end)
+		end
+
+		if obj:IsA("Beam") or obj:IsA("Trail") then
+			RPDiv()
+			RPLbl(obj.ClassName, themes.preset.accent)
+			RPTextBox("Texture", obj.Texture, function(t) pcall(function() obj.Texture = t end) end)
+			local startC = Color3.new(1, 1, 1)
+			pcall(function() startC = obj.Color.Keypoints[1].Value end)
+			RPColorPicker("Color", startC, function(c) pcall(function() obj.Color = ColorSequence.new(c) end) end)
+			RPSlider("Width0", 0, 10, obj.Width0, function(vv) pcall(function() obj.Width0 = vv end) end)
+			RPSlider("Width1", 0, 10, obj.Width1, function(vv) pcall(function() obj.Width1 = vv end) end)
+			RPSlider("Transparency", 0, 1, obj.Transparency.Keypoints[1].Value, function(vv) pcall(function() obj.Transparency = NumberSequence.new(vv) end) end)
+		end
+	end
+
+	-- Explorer tree
+	local function BuildTree()
+		for _, c in pairs(LeftPanel:GetChildren()) do
+			if not c:IsA("UIListLayout") and not c:IsA("UIPadding") then c:Destroy() end
+		end
+		_selectedRow = nil
+		ClearRP()
+		RPLbl("Select a part to edit properties.", themes.preset.unselected_text)
+
+		local function AddHeader(text)
+			local hRow = library:create("Frame", {
+				Size = UDim2.new(1, 0, 0, 20),
+				BackgroundColor3 = Color3.fromRGB(26, 26, 26),
+				BorderSizePixel = 0,
+				ZIndex = 104,
+				Parent = LeftPanel,
+			})
+			library:create("UIStroke", {
+				Parent = hRow,
+				Color = Color3.fromRGB(19, 19, 19),
+				Thickness = 1,
+				LineJoinMode = Enum.LineJoinMode.Miter,
+			})
+			local lbl = library:create("TextLabel", {
+				Text = text,
+				Size = UDim2.new(1, -8, 1, 0),
+				Position = UDim2.new(0, 8, 0, 0),
+				BackgroundTransparency = 1,
+				FontFace = library.font,
+				TextSize = 12,
+				TextColor3 = themes.preset.accent,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 105,
+				Parent = hRow,
+				TextStrokeTransparency = 0,
+				TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+			})
+			library:apply_theme(lbl, "accent", "TextColor3")
+		end
+
+		local function AddNode(label, obj)
+			local row = library:create("Frame", {
+				Size = UDim2.new(1, 0, 0, 18),
+				BackgroundTransparency = 1,
+				BorderSizePixel = 0,
+				ZIndex = 104,
+				Parent = LeftPanel,
+			})
+			library:create("UIPadding", { PaddingLeft = UDim.new(0, 10), Parent = row })
+			local dot = library:create("Frame", {
+				Size = UDim2.new(0, 2, 0, 8),
+				Position = UDim2.new(0, -8, 0.5, -4),
+				BackgroundColor3 = themes.preset.unselected_text,
+				BorderSizePixel = 0,
+				ZIndex = 105,
+				Parent = row,
+			})
+			local lbl = library:create("TextLabel", {
+				Text = label,
+				Size = UDim2.new(1, 0, 1, 0),
+				BackgroundTransparency = 1,
+				FontFace = library.font,
+				TextSize = 12,
+				TextColor3 = themes.preset.unselected_text,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 105,
+				Parent = row,
+				TextStrokeTransparency = 0,
+				TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+			})
+			if obj then
+				local btn = library:create("TextButton", {
+					Size = UDim2.new(1, 0, 1, 0),
+					BackgroundTransparency = 1,
+					Text = "",
+					ZIndex = 106,
+					Parent = row,
+				})
+				btn.MouseEnter:Connect(function()
+					if row ~= _selectedRow then
+						row.BackgroundTransparency = 0
+						row.BackgroundColor3 = themes.preset.accent
+					end
+				end)
+				btn.MouseLeave:Connect(function()
+					if row ~= _selectedRow then row.BackgroundTransparency = 1 end
+				end)
+				btn.MouseButton1Click:Connect(function()
+					if _selectedRow and _selectedRow ~= row then
+						_selectedRow.BackgroundTransparency = 1
+						for _, ch in ipairs(_selectedRow:GetChildren()) do
+							if ch:IsA("Frame") and ch.Size.X.Offset == 2 then ch.BackgroundColor3 = themes.preset.unselected_text end
+							if ch:IsA("TextLabel") then ch.TextColor3 = themes.preset.unselected_text end
+						end
+					end
+					_selectedRow = row
+					row.BackgroundTransparency = 0
+					row.BackgroundColor3 = Color3.fromRGB(26, 26, 26)
+					dot.BackgroundColor3 = themes.preset.accent
+					lbl.TextColor3 = Color3.fromRGB(255, 255, 255)
+					BuildProperties(obj)
+					library._expSelected = obj
+				end)
+			end
+			return row
+		end
+
+		local function AddFolder(label, items)
+			local expanded = true
+			local folderRows = {}
+			local folderRow = library:create("Frame", {
+				Size = UDim2.new(1, 0, 0, 18),
+				BackgroundColor3 = Color3.fromRGB(18, 18, 18),
+				BorderSizePixel = 0,
+				ZIndex = 104,
+				Parent = LeftPanel,
+			})
+			library:create("UIStroke", {
+				Parent = folderRow,
+				Color = Color3.fromRGB(19, 19, 19),
+				Thickness = 1,
+				LineJoinMode = Enum.LineJoinMode.Miter,
+			})
+			local arrowLbl = library:create("TextLabel", {
+				Text = "v",
+				Size = UDim2.new(0, 12, 1, 0),
+				Position = UDim2.new(0, 4, 0, 0),
+				BackgroundTransparency = 1,
+				FontFace = library.font,
+				TextSize = 12,
+				TextColor3 = themes.preset.accent,
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 105,
+				Parent = folderRow,
+				TextStrokeTransparency = 0,
+				TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+			})
+			library:apply_theme(arrowLbl, "accent", "TextColor3")
+			library:create("TextLabel", {
+				Text = label,
+				Size = UDim2.new(1, -20, 1, 0),
+				Position = UDim2.new(0, 18, 0, 0),
+				BackgroundTransparency = 1,
+				FontFace = library.font,
+				TextSize = 12,
+				TextColor3 = Color3.fromRGB(255, 255, 255),
+				TextXAlignment = Enum.TextXAlignment.Left,
+				ZIndex = 105,
+				Parent = folderRow,
+				TextStrokeTransparency = 0,
+				TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
+			})
+			for _, obj in ipairs(items) do
+				local r = AddNode(obj.Name .. " [" .. obj.ClassName .. "]", obj)
+				if r then
+					library:create("UIPadding", { PaddingLeft = UDim.new(0, 8), Parent = r })
+					table.insert(folderRows, r)
+				end
+			end
+			local fBtn = library:create("TextButton", {
+				Size = UDim2.new(1, 0, 1, 0),
+				BackgroundTransparency = 1,
+				Text = "",
+				ZIndex = 106,
+				Parent = folderRow,
+			})
+			fBtn.MouseButton1Click:Connect(function()
+				expanded = not expanded
+				arrowLbl.Text = expanded and "v" or ">"
+				for _, r in ipairs(folderRows) do r.Visible = expanded end
+			end)
+		end
+
+		local function ScanTools(container, tag)
+			local tools = {}
+			for _, v in pairs(container:GetChildren()) do
+				if v:IsA("Tool") then table.insert(tools, v) end
+			end
+			for _, tool in ipairs(tools) do
+				AddHeader(tag .. tool.Name)
+				local group1 = {}
+				for _, desc in ipairs(tool:GetDescendants()) do
+					local g1 = desc:IsA("BasePart") or desc:IsA("SpecialMesh") or desc:IsA("Decal") or desc:IsA("Texture") or desc:IsA("PointLight") or desc:IsA("SpotLight") or desc:IsA("SurfaceLight") or desc:IsA("ParticleEmitter")
+					if g1 then table.insert(group1, desc) end
+				end
+				if #group1 > 0 then AddFolder("Parts / Particles / Meshes", group1) end
+				if #group1 == 0 then AddNode("(no supported objects)", nil) end
+			end
+			return #tools
+		end
+
+		local n1 = ScanTools(lp.Character or Instance.new("Folder"), "[Eq]  ")
+		local n2 = ScanTools(lp.Backpack or Instance.new("Folder"), "[Bp]  ")
+
+		if n1 == 0 and n2 == 0 then
+			RPLbl("No tools found. Click refresh.", themes.preset.unselected_text)
+		end
+	end
+
+	RefreshBtn.MouseButton1Click:Connect(function()
+		BuildTree()
+	end)
+
+	BuildTree()
 end
 
 function library:panel(properties)
