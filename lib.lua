@@ -4693,7 +4693,7 @@ function library:keybind(properties)
 
 			cfg.active = __cached
 			flags[cfg.flag]["active"] = __cached
-			cfg.callback(__cached)
+			cfg.callback(cfg.key, __cached)
 
 			flags[cfg.flag] = {
 				mode = cfg.mode,
@@ -4714,7 +4714,7 @@ function library:keybind(properties)
 
 			keybind.Text = "[" .. string.lower(_text2) .. "]"
 
-			cfg.callback(cfg.active or false)
+			cfg.callback(cfg.key, cfg.active or false)
 
 			flags[cfg.flag] = {
 				mode = cfg.mode,
@@ -4728,7 +4728,7 @@ function library:keybind(properties)
 				cfg.active = true
 			end
 
-			cfg.callback(cfg.active or false)
+			cfg.callback(cfg.key, cfg.active or false)
 
 			flags[cfg.flag] = {
 				mode = cfg.mode,
