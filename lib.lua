@@ -4409,7 +4409,7 @@ function library:keybind(properties)
 		name = properties.name or nil,
 		key = properties.default or properties.key or nil,
 		mode = properties.mode or "toggle",
-		active = properties.default or false,
+		active = properties.active or false,
 		display = properties.displayName or properties.display or properties.name or nil,
 		hold_instances = {},
 	}
