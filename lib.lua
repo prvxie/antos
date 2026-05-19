@@ -4947,6 +4947,8 @@ function library:textbox(properties)
 	library.config_flags[cfg.flag] = cfg.set
 
 	return setmetatable(cfg, library)
+end
+
 local _teSliding = false
 local _teSlTrack, _teSlFill, _teSlLbl, _teSlName, _teSlMin, _teSlMax, _teSlCb
 local _teSVDrag = false
