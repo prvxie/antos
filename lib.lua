@@ -1728,10 +1728,18 @@ function library:window(properties)
 			SortOrder = Enum.SortOrder.LayoutOrder,
 		})
 
-		local btn_tp = library:create("TextButton", {
+		local tp_wrap = library:create("Frame", {
 			Parent = actions,
 			Size = UDim2.new(1, 0, 0, 16),
+			BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+			BorderSizePixel = 0,
+		})
+		local tp_lbl = library:create("TextLabel", {
+			Parent = tp_wrap,
+			Position = UDim2.new(0, 2, 0, 2),
+			Size = UDim2.new(1, -4, 1, -4),
 			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Teleport",
 			FontFace = library.font,
@@ -1739,10 +1747,15 @@ function library:window(properties)
 			TextStrokeTransparency = 0.5,
 			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local tp_stroke = library:create("UIStroke", { Parent = btn_tp, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
-		library:connection(btn_tp.MouseEnter, function() tp_stroke.Color = themes.preset.accent end)
-		library:connection(btn_tp.MouseLeave, function() tp_stroke.Color = Color3.fromRGB(56, 56, 56) end)
-
+		local btn_tp = library:create("TextButton", {
+			Parent = tp_wrap,
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 4,
+		})
+		library:connection(btn_tp.MouseEnter, function() tp_lbl.TextColor3 = themes.preset.accent end)
+		library:connection(btn_tp.MouseLeave, function() tp_lbl.TextColor3 = Color3.fromRGB(170, 170, 170) end)
 		btn_tp.MouseButton1Click:Connect(function()
 			local char = player.Character
 			local lchar = lp.Character
@@ -1766,10 +1779,18 @@ function library:window(properties)
 			Padding = UDim.new(0, 4),
 		})
 
-		local btn_spec = library:create("TextButton", {
+		local spec_wrap = library:create("Frame", {
 			Parent = spec_row,
 			Size = UDim2.new(0.5, -2, 1, 0),
+			BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+			BorderSizePixel = 0,
+		})
+		local spec_lbl = library:create("TextLabel", {
+			Parent = spec_wrap,
+			Position = UDim2.new(0, 2, 0, 2),
+			Size = UDim2.new(1, -4, 1, -4),
 			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Spectate",
 			FontFace = library.font,
@@ -1777,10 +1798,15 @@ function library:window(properties)
 			TextStrokeTransparency = 0.5,
 			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local spec_stroke = library:create("UIStroke", { Parent = btn_spec, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
-		library:connection(btn_spec.MouseEnter, function() spec_stroke.Color = themes.preset.accent end)
-		library:connection(btn_spec.MouseLeave, function() spec_stroke.Color = Color3.fromRGB(56, 56, 56) end)
-
+		local btn_spec = library:create("TextButton", {
+			Parent = spec_wrap,
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 4,
+		})
+		library:connection(btn_spec.MouseEnter, function() spec_lbl.TextColor3 = themes.preset.accent end)
+		library:connection(btn_spec.MouseLeave, function() spec_lbl.TextColor3 = Color3.fromRGB(170, 170, 170) end)
 		btn_spec.MouseButton1Click:Connect(function()
 			local char = player.Character
 			if char then
@@ -1789,10 +1815,18 @@ function library:window(properties)
 			end
 		end)
 
-		local btn_unspec = library:create("TextButton", {
+		local unspec_wrap = library:create("Frame", {
 			Parent = spec_row,
 			Size = UDim2.new(0.5, -2, 1, 0),
+			BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+			BorderSizePixel = 0,
+		})
+		local unspec_lbl = library:create("TextLabel", {
+			Parent = unspec_wrap,
+			Position = UDim2.new(0, 2, 0, 2),
+			Size = UDim2.new(1, -4, 1, -4),
 			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Unspec",
 			FontFace = library.font,
@@ -1800,10 +1834,15 @@ function library:window(properties)
 			TextStrokeTransparency = 0.5,
 			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local unspec_stroke = library:create("UIStroke", { Parent = btn_unspec, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
-		library:connection(btn_unspec.MouseEnter, function() unspec_stroke.Color = themes.preset.accent end)
-		library:connection(btn_unspec.MouseLeave, function() unspec_stroke.Color = Color3.fromRGB(56, 56, 56) end)
-
+		local btn_unspec = library:create("TextButton", {
+			Parent = unspec_wrap,
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 4,
+		})
+		library:connection(btn_unspec.MouseEnter, function() unspec_lbl.TextColor3 = themes.preset.accent end)
+		library:connection(btn_unspec.MouseLeave, function() unspec_lbl.TextColor3 = Color3.fromRGB(170, 170, 170) end)
 		btn_unspec.MouseButton1Click:Connect(function()
 			camera.CameraSubject = lp.Character and lp.Character:FindFirstChildOfClass("Humanoid")
 			camera.CameraType = Enum.CameraType.Custom
@@ -1820,10 +1859,18 @@ function library:window(properties)
 			Padding = UDim.new(0, 4),
 		})
 
-		local btn_cpname = library:create("TextButton", {
+		local cpname_wrap = library:create("Frame", {
 			Parent = copy_row,
 			Size = UDim2.new(0.5, -2, 1, 0),
+			BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+			BorderSizePixel = 0,
+		})
+		local cpname_lbl = library:create("TextLabel", {
+			Parent = cpname_wrap,
+			Position = UDim2.new(0, 2, 0, 2),
+			Size = UDim2.new(1, -4, 1, -4),
 			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Copy Name",
 			FontFace = library.font,
@@ -1831,21 +1878,32 @@ function library:window(properties)
 			TextStrokeTransparency = 0.5,
 			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local cpname_stroke = library:create("UIStroke", { Parent = btn_cpname, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
-		library:connection(btn_cpname.MouseEnter, function() cpname_stroke.Color = themes.preset.accent end)
-		library:connection(btn_cpname.MouseLeave, function() cpname_stroke.Color = Color3.fromRGB(56, 56, 56) end)
-
+		local btn_cpname = library:create("TextButton", {
+			Parent = cpname_wrap,
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 4,
+		})
+		library:connection(btn_cpname.MouseEnter, function() cpname_lbl.TextColor3 = themes.preset.accent end)
+		library:connection(btn_cpname.MouseLeave, function() cpname_lbl.TextColor3 = Color3.fromRGB(170, 170, 170) end)
 		btn_cpname.MouseButton1Click:Connect(function()
-			pcall(function()
-				setclipboard(player.Name)
-			end)
-			library:notification({ text = "Copied name: " .. player.Name })
+			pcall(function() setclipboard(player.Name) end)
+			library:notification({ text = "Copied: " .. player.Name })
 		end)
 
-		local btn_cpid = library:create("TextButton", {
+		local cpid_wrap = library:create("Frame", {
 			Parent = copy_row,
 			Size = UDim2.new(0.5, -2, 1, 0),
+			BackgroundColor3 = Color3.fromRGB(8, 8, 8),
+			BorderSizePixel = 0,
+		})
+		local cpid_lbl = library:create("TextLabel", {
+			Parent = cpid_wrap,
+			Position = UDim2.new(0, 2, 0, 2),
+			Size = UDim2.new(1, -4, 1, -4),
 			BackgroundColor3 = Color3.fromRGB(38, 38, 38),
+			BorderColor3 = Color3.fromRGB(56, 56, 56),
 			TextColor3 = Color3.fromRGB(170, 170, 170),
 			Text = "Copy ID",
 			FontFace = library.font,
@@ -1853,16 +1911,20 @@ function library:window(properties)
 			TextStrokeTransparency = 0.5,
 			TextStrokeColor3 = Color3.fromRGB(0, 0, 0),
 		})
-		local cpid_stroke = library:create("UIStroke", { Parent = btn_cpid, Color = Color3.fromRGB(56, 56, 56), Thickness = 1 })
-		library:connection(btn_cpid.MouseEnter, function() cpid_stroke.Color = themes.preset.accent end)
-		library:connection(btn_cpid.MouseLeave, function() cpid_stroke.Color = Color3.fromRGB(56, 56, 56) end)
-
+		local btn_cpid = library:create("TextButton", {
+			Parent = cpid_wrap,
+			Size = UDim2.new(1, 0, 1, 0),
+			BackgroundTransparency = 1,
+			Text = "",
+			ZIndex = 4,
+		})
+		library:connection(btn_cpid.MouseEnter, function() cpid_lbl.TextColor3 = themes.preset.accent end)
+		library:connection(btn_cpid.MouseLeave, function() cpid_lbl.TextColor3 = Color3.fromRGB(170, 170, 170) end)
 		btn_cpid.MouseButton1Click:Connect(function()
-			pcall(function()
-				setclipboard(tostring(player.UserId))
-			end)
+			pcall(function() setclipboard(tostring(player.UserId)) end)
 			library:notification({ text = "Copied ID: " .. player.UserId })
 		end)
+
 
 		local is_expanded = false
 		local function set_expanded(bool)
